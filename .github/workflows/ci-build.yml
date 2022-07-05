@@ -48,7 +48,7 @@ jobs:
             ghcr.io/${{ github.repository }}:${{ github.sha }}
 
       - name: Set up npm
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: '14'
 
