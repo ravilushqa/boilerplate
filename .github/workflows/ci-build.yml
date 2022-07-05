@@ -20,7 +20,7 @@ jobs:
         run: echo ${{ steps.buildx.outputs.platforms }}
 
       - name: build and deploy master image to dockerhub
-        if: ${{ github.ref == 'refs/heads/main' }}
+#        if: ${{ github.ref == 'refs/heads/main' }}
         env:
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
           USERNAME: ${{ github.actor }}
