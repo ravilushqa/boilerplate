@@ -51,6 +51,8 @@ jobs:
 
       - name: Deploy to caprover
         run:
+          app_name="$(echo ${{ github.repository }} | cut -d'/' -f2)"
+          echo ${app_name}
           npm install -g caprover
-          caprover deploy -h 'https://captain.ravilushqa.dev' -p '${{ secrets.CAPROVER_PASSWORD }}' -i 'ghcr.io/${{ github.actor }}/boilerplate:latest' -a 'boilerplate'
+          caprover deploy -h 'https://captain.ravilushqa.dev' -p '${{ secrets.CAPROVER_PASSWORD }}' -i 'ghcr.io/${{ github.repository }}:latest' -a '${app_name}'
 
