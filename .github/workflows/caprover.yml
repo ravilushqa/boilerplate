@@ -10,10 +10,13 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      -
-        uses: AlexxNB/caprover-action@v1
-        with:
-          server: 'https://captain.ravilushqa.dev'
-          password: '${{ secrets.CAPROVER_PASSWORD }}'
-          appname: 'boilerplate'
-          branch: 'main'
+    - name: Set up npm
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+
+    - name: Install caprover
+      run: npm install -g caprover
+
+    - name: Caprover Deploy
+      run: caprover deploy -h 'https://captain.ravilushqa.dev' -p '${{ secrets.CAPROVER_PASSWORD }}' -i 'ghcr.io/${{ github.actor }}/boilerplate:latest' -a 'boilerplate'
