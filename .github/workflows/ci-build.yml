@@ -40,5 +40,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ${{ github.actor }}/boilerplate:latest
-            ghcr.io/${{ github.actor }}/boilerplate:latest
+            ${{ github.repository }}:latest
+            ${{ github.repository }}:{{ github.sha }}
+            ghcr.io/$${{ github.repository }}:latest
+            ghcr.io/$${{ github.repository }}:$${{ github.sha }}
