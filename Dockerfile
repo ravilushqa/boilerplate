@@ -11,5 +11,5 @@ FROM alpine:latest
 
 RUN apk update && apk add --no-cache ca-certificates tzdata
 WORKDIR /usr/app
-COPY --from=builder /usr/src/service .
+COPY --from=builder /usr/src/app .
 CMD ["./app"]
