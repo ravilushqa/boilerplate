@@ -40,9 +40,9 @@ jobs:
           push: true
           tags: |
             ${{ github.repository }}:latest
-            ${USERNAME}/boilerplate:${{ github.sha }}
-            ghcr.io/${USERNAME}/boilerplate:latest
-            ghcr.io/${USERNAME}/boilerplate:${{ github.sha }}
+            ${{ github.repository }}:${{ github.sha }}
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
 
       - name: Set up npm
         uses: actions/setup-node@v2
