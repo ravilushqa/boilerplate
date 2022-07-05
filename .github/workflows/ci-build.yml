@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - 'main'
+  pull_request:
 
 jobs:
   docker:
@@ -33,13 +34,31 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       -
         name: Build and push
+        env:
+          USERNAME: ${{ github.actor }}
+          APPNAME: "$(echo ${{ github.repository }} | cut -d'/' -f2)"
         uses: docker/build-push-action@v3
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ${{ github.actor }}/boilerplate:latest
-            ${{ github.actor }}/boilerplate:${{ github.sha }}
-            ghcr.io/${{ github.actor }}/boilerplate:latest
-            ghcr.io/${{ github.actor }}/boilerplate:${{ github.sha }}
+            ${USERNAME}/${APPNAME}:latest
+            ${USERNAME}/boilerplate:${{ github.sha }}
+            ghcr.io/${USERNAME}/boilerplate:latest
+            ghcr.io/${USERNAME}/boilerplate:${{ github.sha }}
+        run:
+          echo ${APPNAME}
+          echo ${USERNAME}
+
+      - name: Set up npm
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Deploy to caprover
+        run:
+
+          npm install -g caprover
+          caprover deploy -h 'https://captain.ravilushqa.dev' -p '${{ secrets.CAPROVER_PASSWORD }}' -i 'ghcr.io/${{ github.actor }}/boilerplate:latest' -a 'boilerplate'
+
