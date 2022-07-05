@@ -7,6 +7,7 @@ import (
 )
 
 type config struct {
+	Env         string `env:"ENV" envDefault:"development"`
 	LogLevel    string `env:"LOG_LEVEL" envDefault:"info"`
 	HTTPAddress string `env:"HTTP_ADDRESS" envDefault:"0.0.0.0:10001"`
 }

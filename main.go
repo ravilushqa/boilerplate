@@ -17,7 +17,7 @@ func buildContainer() (*dig.Container, error) {
 	constructors := []interface{}{
 		newConfig,
 		func(cfg *config) (*zap.Logger, error) {
-			return loggerprovider.New(cfg.LogLevel)
+			return loggerprovider.New(cfg.Env, cfg.LogLevel)
 		},
 		func(cfg *config) *httpprovider.Server {
 			return httpprovider.New(cfg.HTTPAddress, nil)
@@ -61,11 +61,12 @@ func main() {
 	}
 
 	err = container.Invoke(func(l *zap.Logger) error {
+		defer func() { _ = l.Sync() }() // https://github.com/uber-go/zap/issues/880
 		l.Info("start gracefully shutdown...")
 		_, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 
-		return l.Sync()
+		return nil
 	})
 	if err != nil {
 		tl.Error("shutdown failed", zap.Error(err))
