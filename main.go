@@ -56,7 +56,7 @@ func main() {
 		tl.Fatal("invoke failed", zap.Error(err))
 	}
 
-	if err := r.Wait(); err != nil {
+	if err = r.Wait(); err != nil {
 		tl.Error("run failed", zap.Error(err))
 	}
 
