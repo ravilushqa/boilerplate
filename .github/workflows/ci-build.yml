@@ -39,7 +39,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ${USERNAME}/${APPNAME}:latest
+            ${{ github.repository }}:latest
             ${USERNAME}/boilerplate:${{ github.sha }}
             ghcr.io/${USERNAME}/boilerplate:latest
             ghcr.io/${USERNAME}/boilerplate:${{ github.sha }}
