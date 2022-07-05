@@ -47,9 +47,6 @@ jobs:
             ${USERNAME}/boilerplate:${{ github.sha }}
             ghcr.io/${USERNAME}/boilerplate:latest
             ghcr.io/${USERNAME}/boilerplate:${{ github.sha }}
-        run:
-          echo ${APPNAME}
-          echo ${USERNAME}
 
       - name: Set up npm
         uses: actions/setup-node@v2
@@ -58,7 +55,6 @@ jobs:
 
       - name: Deploy to caprover
         run:
-
           npm install -g caprover
           caprover deploy -h 'https://captain.ravilushqa.dev' -p '${{ secrets.CAPROVER_PASSWORD }}' -i 'ghcr.io/${{ github.actor }}/boilerplate:latest' -a 'boilerplate'
 
