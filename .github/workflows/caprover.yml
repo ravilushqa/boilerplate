@@ -16,3 +16,4 @@ jobs:
           server: 'https://captain.ravilushqa.dev'
           password: '${{ secrets.CAPROVER_PASSWORD }}'
           appname: 'boilerplate'
+          branch: 'main'
