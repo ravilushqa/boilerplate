@@ -54,5 +54,4 @@ jobs:
 
       - name: Deploy to caprover
         run:
-          npm install -g caprover && \
-          caprover deploy -h 'https://captain.ravilushqa.dev' -p '${{ secrets.CAPROVER_PASSWORD }}' -i 'ghcr.io/${{ github.repository }}:latest' -a ${{ github.event.repository.name }}
+          npm install -g caprover && caprover deploy -h 'https://captain.ravilushqa.dev' -p '${{ secrets.CAPROVER_PASSWORD }}' -i 'ghcr.io/${{ github.repository }}:latest' -a ${{ github.event.repository.name }}
