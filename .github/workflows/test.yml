@@ -1,4 +1,14 @@
-on: [push, pull_request]
+on:
+  push:
+    tags:
+      - v*
+    branches:
+      - master
+      - main
+  pull_request:
+permissions:
+  contents: read
+
 name: Test
 jobs:
   test:
