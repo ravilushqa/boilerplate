@@ -1,8 +1,8 @@
 # boilerplate
 
-When cloning, specify the name of the directory for cloning, 
-which has the name of the service and execute the command:
-
+1. Create empty repo on github with <name>
+2. git clone this repo with <name> as the name of the directory
+3. run command bellow
 ```bash
   make -f Makefile.env
 ```
