@@ -44,6 +44,12 @@ jobs:
           cache-to: type=gha,mode=max
           tags: |
             ${{ github.repository }}:latest
+      -
+        name: Push Image to multiple registries
+        uses: akhilerm/tag-push-action@v2.0.0
+        with:
+          src: ${{ github.repository }}:latest
+          dst: |
             ghcr.io/${{ github.repository }}:latest
 
       - name: Set up npm
