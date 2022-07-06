@@ -41,10 +41,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-#            ${{ github.repository }}:latest
-#            ${{ github.repository }}:${{ github.sha }}
             ghcr.io/${{ github.repository }}:latest
-#            ghcr.io/${{ github.repository }}:${{ github.sha }}
 
       - name: Set up npm
         uses: actions/setup-node@v2
