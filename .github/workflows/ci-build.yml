@@ -56,4 +56,3 @@ jobs:
           echo "GITHUB_REPOSITORY=${GITHUB_REPOSITORY}, repo=${repo}"
           npm install -g caprover
           caprover deploy -h 'https://captain.ravilushqa.dev' -p '${{ secrets.CAPROVER_PASSWORD }}' -i 'ghcr.io/${{ github.repository }}:latest' -a ${repo}
-
