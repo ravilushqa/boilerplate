@@ -35,27 +35,24 @@ jobs:
         name: Build and push
         env:
           USERNAME: ${{ github.actor }}
-          APPNAME: "$(echo ${{ github.repository }} | cut -d'/' -f2)"
         uses: docker/build-push-action@v3
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ${{ github.repository }}:latest
-            ${{ github.repository }}:${{ github.sha }}
             ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
 
       - name: Set up npm
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v2
         with:
           node-version: '14'
 
       - name: Deploy to caprover
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run:
-          app_name="$(echo ${{ github.repository }} | cut -d'/' -f2)"
-          echo ${app_name}
+          repo="$(echo ${GITHUB_REPOSITORY} | cut -d'/' -f2)"
+          echo "GITHUB_REPOSITORY=${GITHUB_REPOSITORY}, repo=${repo}"
           npm install -g caprover
-          caprover deploy -h 'https://captain.ravilushqa.dev' -p '${{ secrets.CAPROVER_PASSWORD }}' -i 'ghcr.io/${{ github.repository }}:latest' -a '${app_name}'
-
+          caprover deploy -h 'https://captain.ravilushqa.dev' -p '${{ secrets.CAPROVER_PASSWORD }}' -i 'ghcr.io/${{ github.repository }}:latest' -a ${repo}
