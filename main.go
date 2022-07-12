@@ -22,7 +22,7 @@ func main() {
 	if err != nil {
 		l.Fatal("failed to create logger", zap.Error(err))
 	}
-	defaultHttp := httpprovider.New(cfg.HTTPAddress, nil)
+	systemHTTP := httpprovider.New(cfg.HTTPAddress, nil)
 
 	// run application
 	g, gctx := errgroup.WithContext(context.Background())
@@ -31,7 +31,7 @@ func main() {
 	})
 	g.Go(func() error {
 		l.Info("starting http server")
-		return defaultHttp.Run(gctx)
+		return systemHTTP.Run(gctx)
 	})
 	if err := g.Wait(); err != nil {
 		l.Error("run failed", zap.Error(err))
