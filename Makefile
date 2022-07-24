@@ -1,4 +1,4 @@
-.PHONY: lint test test-coverage helm-install
+.PHONY: lint test test-coverage helm-install protoc precommit
 
 lint:
 	golangci-lint run --timeout=30m ./...
