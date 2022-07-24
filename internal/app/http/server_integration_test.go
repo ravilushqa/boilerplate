@@ -2,9 +2,10 @@ package http
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
-	"net/http/httptest"
+	"sync"
 	"testing"
 
 	"github.com/gorilla/mux"
@@ -13,16 +14,30 @@ import (
 )
 
 const (
-	addr = ":8080"
+	addr    = "http://localhost:8080"
+	srvAddr = ":8080"
 )
 
 func Test_server(t *testing.T) {
-	h := New(zap.NewNop(), mux.NewRouter(), addr)
-	srv := httptest.NewServer(h)
-	defer srv.Close()
+	s := New(zap.NewNop(), mux.NewRouter(), srvAddr)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		err := s.Run(ctx)
+		require.NoError(t, err)
+	}()
+
+	defer func() {
+		cancel()
+		wg.Wait()
+	}()
+
 	t.Run("greet", func(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
-			resp, err := http.Post(srv.URL+"/greet", "application/json", bytes.NewBuffer([]byte(`{"name":"Ravilushqa"}`)))
+			resp, err := http.Post(addr+"/greet", "application/json", bytes.NewBuffer([]byte(`{"name":"Ravilushqa"}`)))
 			require.NoError(t, err)
 			defer resp.Body.Close()
 
@@ -35,7 +50,7 @@ func Test_server(t *testing.T) {
 			require.Equal(t, "Hello Ravilushqa", respBody.Greeting)
 		})
 		t.Run("failure", func(t *testing.T) {
-			resp, err := http.Post(srv.URL+"/greet", "application/json", bytes.NewBuffer([]byte(`{"name":""}`)))
+			resp, err := http.Post(addr+"/greet", "application/json", bytes.NewBuffer([]byte(`{"name":""}`)))
 			require.NoError(t, err)
 			defer resp.Body.Close()
 
@@ -51,7 +66,7 @@ func Test_server(t *testing.T) {
 	})
 
 	t.Run("not-found", func(t *testing.T) {
-		resp, err := http.Get(srv.URL + "/not-found")
+		resp, err := http.Get(addr + "/not-found")
 		require.NoError(t, err)
 		defer resp.Body.Close()
 		require.Equal(t, http.StatusNotFound, resp.StatusCode)

@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package api;
+option go_package = "github.com/ravilushqa/boilerplate/api";
+
+service Greeter {
+  rpc Greet(GreetRequest) returns (GreetResponse);
+}
+
+message GreetRequest {
+  string name = 1;
+}
+
+message GreetResponse {
+  string message = 1;
+}
