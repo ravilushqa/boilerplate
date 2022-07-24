@@ -45,6 +45,7 @@ func (s *server) Run(ctx context.Context) error {
 			return
 		}
 	}()
+	s.l.Info("Starting app http server", zap.String("addr", s.srv.Addr))
 	if err := s.srv.ListenAndServe(); err != http.ErrServerClosed {
 		return err
 	}

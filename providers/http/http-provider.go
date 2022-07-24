@@ -7,15 +7,17 @@ import (
 	"net/http/pprof"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.uber.org/zap"
 )
 
 // Server struct for http server
 type Server struct {
+	l   *zap.Logger
 	srv *http.Server
 }
 
 // New creates server
-func New(addr string, handler *http.ServeMux) *Server {
+func New(l *zap.Logger, addr string, handler *http.ServeMux) *Server {
 	if handler == nil {
 		handler = http.NewServeMux()
 	}
@@ -33,6 +35,7 @@ func New(addr string, handler *http.ServeMux) *Server {
 	handler.HandleFunc("/debug/pprof/trace", pprof.Trace)
 
 	return &Server{
+		l: l,
 		srv: &http.Server{
 			Addr:    addr,
 			Handler: handler,
@@ -49,6 +52,7 @@ func (s *Server) Run(ctx context.Context) error {
 			return
 		}
 	}()
+	s.l.Info("Starting infra http server", zap.String("addr", s.srv.Addr))
 	if err := s.srv.ListenAndServe(); err != http.ErrServerClosed {
 		return err
 	}

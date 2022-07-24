@@ -13,7 +13,7 @@ import (
 )
 
 func TestServer_Greet(t *testing.T) {
-	s := NewServer(zap.NewNop(), "")
+	s := New(zap.NewNop(), "")
 
 	// set up test cases
 	tests := []struct {
