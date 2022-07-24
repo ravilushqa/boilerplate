@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/ravilushqa/boilerplate/internal/app/grpc"
 	"github.com/ravilushqa/boilerplate/internal/app/http"
 	httpprovider "github.com/ravilushqa/boilerplate/providers/http"
 	loggerprovider "github.com/ravilushqa/boilerplate/providers/logger"
@@ -24,22 +25,25 @@ func main() {
 	if err != nil {
 		l.Fatal("failed to create logger", zap.Error(err))
 	}
-	systemHTTP := httpprovider.New(cfg.HTTPAddress, nil)
+	systemHTTPServer := httpprovider.New(l, cfg.HTTPAddress, nil)
 	r := mux.NewRouter()
 
-	appHTTP := http.New(l, r, cfg.AppHTTPAddress)
+	appHTTPServer := http.New(l, r, cfg.AppHTTPAddress)
+
+	grpcServer := grpc.New(l, cfg.GRPCAddress)
 	// run application
 	g, gctx := errgroup.WithContext(context.Background())
 	g.Go(func() error {
 		return listenOsSignals(gctx)
 	})
 	g.Go(func() error {
-		l.Info("starting system http server")
-		return systemHTTP.Run(gctx)
+		return systemHTTPServer.Run(gctx)
 	})
 	g.Go(func() error {
-		l.Info("starting app http server")
-		return appHTTP.Run(gctx)
+		return appHTTPServer.Run(gctx)
+	})
+	g.Go(func() error {
+		return grpcServer.Run(gctx)
 	})
 	if err := g.Wait(); err != nil {
 		l.Error("run failed", zap.Error(err))

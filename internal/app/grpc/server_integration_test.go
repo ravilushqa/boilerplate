@@ -18,7 +18,7 @@ const (
 )
 
 func TestServer(t *testing.T) {
-	s := NewServer(zap.NewNop(), addr)
+	s := New(zap.NewNop(), addr)
 	ctx, cancel := context.WithCancel(context.Background())
 	wg := &sync.WaitGroup{}
 	wg.Add(1)

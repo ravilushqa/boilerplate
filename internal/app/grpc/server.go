@@ -19,16 +19,16 @@ import (
 
 type server struct {
 	api.GreeterServer
-	l       *zap.Logger
-	address string
+	l    *zap.Logger
+	addr string
 }
 
-func NewServer(l *zap.Logger, address string) *server {
-	return &server{l: l, address: address}
+func New(l *zap.Logger, addr string) *server {
+	return &server{l: l, addr: addr}
 }
 
 func (s *server) Run(ctx context.Context) error {
-	lis, err := net.Listen("tcp", s.address)
+	lis, err := net.Listen("tcp", s.addr)
 	if err != nil {
 		return err
 	}
@@ -51,14 +51,14 @@ func (s *server) Run(ctx context.Context) error {
 
 	reflection.Register(grpcSrv)
 
-	s.l.Info("grpc api started", zap.String("address", s.address))
-
 	defer grpcSrv.GracefulStop()
 
 	go func() {
 		<-ctx.Done()
 		grpcSrv.Stop()
 	}()
+
+	s.l.Info("starting grpc server", zap.String("addr", s.addr))
 
 	return grpcSrv.Serve(lis)
 }
