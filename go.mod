@@ -8,7 +8,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/prometheus/client_golang v1.12.2
-	github.com/stretchr/testify v1.7.1
+	github.com/stretchr/testify v1.8.0
 	go.uber.org/automaxprocs v1.5.1
 	go.uber.org/zap v1.21.0
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4
@@ -32,5 +32,5 @@ require (
 	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/genproto v0.0.0-20220722212130-b98a9ff5e252 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
