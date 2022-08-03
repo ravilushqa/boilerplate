@@ -10,6 +10,7 @@ jobs:
           fetch-depth: 0 # otherwise, there would be errors pushing refs to the destination repository.
       - name: Create local changes
         run: |
+          ls
           make PACKAGE_NAME='github.com/\${{ github.repository.owner }}/\${{ github.event.repository.name }}' -f Makefile.env
       - name: Commit files
         run: |
