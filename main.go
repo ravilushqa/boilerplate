@@ -29,11 +29,16 @@ var (
 func main() {
 	// init dependencies
 	cfg := newConfig()
-	l, err := loggerprovider.New(cfg.Env, cfg.LogLevel)
-	if err != nil {
-		l.Fatal("failed to create logger", zap.Error(err))
-	}
-	l = l.With(zap.String("service.id", id), zap.String("service.version", Version))
+	l := initLogger(cfg)
+	ctx, cancel := context.WithCancel(context.Background())
+
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		s := <-sigCh
+		l.Info("received signal", zap.String("signal", s.String()))
+		cancel()
+	}()
 
 	systemHTTPServer := httpprovider.New(l, cfg.HTTPAddress, nil)
 	r := mux.NewRouter()
@@ -42,10 +47,7 @@ func main() {
 
 	grpcServer := grpc.New(l, cfg.GRPCAddress)
 	// run application
-	g, gctx := errgroup.WithContext(context.Background())
-	g.Go(func() error {
-		return listenOsSignals(gctx)
-	})
+	g, gctx := errgroup.WithContext(ctx)
 	g.Go(func() error {
 		return systemHTTPServer.Run(gctx)
 	})
@@ -67,13 +69,11 @@ func main() {
 	l.Info("start gracefully shutdown...")
 }
 
-func listenOsSignals(ctx context.Context) error {
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-	select {
-	case <-ctx.Done():
-		return nil
-	case s := <-sigCh:
-		return fmt.Errorf("received signal %s", s)
+func initLogger(cfg *config) *zap.Logger {
+	l, err := loggerprovider.New(cfg.Env, cfg.LogLevel)
+	if err != nil {
+		panic(fmt.Errorf("failed to init logger: %w", err))
 	}
+	l = l.With(zap.String("service.id", id), zap.String("service.version", Version))
+	return l
 }

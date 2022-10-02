@@ -17,17 +17,17 @@ import (
 	"github.com/ravilushqa/boilerplate/api"
 )
 
-type server struct {
+type Server struct {
 	api.GreeterServer
 	l    *zap.Logger
 	addr string
 }
 
-func New(l *zap.Logger, addr string) *server {
-	return &server{l: l, addr: addr}
+func New(l *zap.Logger, addr string) *Server {
+	return &Server{l: l, addr: addr}
 }
 
-func (s *server) Run(ctx context.Context) error {
+func (s *Server) Run(ctx context.Context) error {
 	lis, err := net.Listen("tcp", s.addr)
 	if err != nil {
 		return err
@@ -51,19 +51,18 @@ func (s *server) Run(ctx context.Context) error {
 
 	reflection.Register(grpcSrv)
 
-	defer grpcSrv.GracefulStop()
-
 	go func() {
 		<-ctx.Done()
-		grpcSrv.Stop()
+		grpcSrv.GracefulStop()
+		s.l.Info("[GRPC] server stopping", zap.String("addr", s.addr))
 	}()
 
-	s.l.Info("starting grpc server", zap.String("addr", s.addr))
+	s.l.Info("[GRPC] server listening", zap.String("addr", s.addr))
 
 	return grpcSrv.Serve(lis)
 }
 
-func (s *server) Greet(_ context.Context, r *api.GreetRequest) (*api.GreetResponse, error) {
+func (s *Server) Greet(_ context.Context, r *api.GreetRequest) (*api.GreetResponse, error) {
 	if r.Name == "" {
 		return nil, status.Error(codes.InvalidArgument, "name cannot be empty")
 	}
