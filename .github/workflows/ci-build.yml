@@ -61,6 +61,6 @@ jobs:
           node-version: '14'
 
       - name: Deploy to caprover
-        if: ${{ github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master' }}
+        if: ${{ github.ref == 'refs/heads/main' }}
         run:
-          npm install -g caprover && caprover deploy -h 'https://captain.ravilushqa.dev' -p '${{ secrets.CAPROVER_PASSWORD }}' -i 'ghcr.io/${{ github.repository }}:latest' -a ${{ github.event.repository.name }}
+          npm install -g caprover && caprover deploy -h 'https://captain.ravilushqa.dev' -p '${{ secrets.CAPROVER_PASSWORD }}' -i 'ghcr.io/${{ github.repository }}:main' -a ${{ github.event.repository.name }}
