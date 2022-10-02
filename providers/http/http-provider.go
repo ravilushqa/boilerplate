@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/pprof"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
@@ -24,7 +25,7 @@ func New(l *zap.Logger, addr string, handler *http.ServeMux) *Server {
 
 	handler.HandleFunc("/health-check", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintln(w, `{"status": "ok"}`)
+		_, _ = fmt.Fprintln(w, `{"status": "ok"}`)
 	})
 	handler.Handle("/metrics", promhttp.Handler())
 
@@ -37,8 +38,9 @@ func New(l *zap.Logger, addr string, handler *http.ServeMux) *Server {
 	return &Server{
 		l: l,
 		srv: &http.Server{
-			Addr:    addr,
-			Handler: handler,
+			Addr:              addr,
+			Handler:           handler,
+			ReadHeaderTimeout: 5 * time.Second,
 		},
 	}
 }

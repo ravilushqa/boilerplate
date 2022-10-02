@@ -1,15 +1,15 @@
 FROM golang:1.19 as builder
 
-WORKDIR /usr/src
+WORKDIR /src
 COPY go.mod .
 COPY go.sum .
 RUN GOPROXY=${PROXY} go mod download
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o app .
+RUN CGO_ENABLED=0 make build
 
 FROM alpine:latest
 
 RUN apk update && apk add --no-cache ca-certificates tzdata
-WORKDIR /usr/app
-COPY --from=builder /usr/src/app .
+COPY --from=builder /src/bin /app
+WORKDIR /app
 CMD ["./app"]

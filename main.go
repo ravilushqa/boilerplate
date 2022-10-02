@@ -18,6 +18,14 @@ import (
 	loggerprovider "github.com/ravilushqa/boilerplate/providers/logger"
 )
 
+// go build -ldflags "-X main.Version=x.y.z"
+var (
+	// Version is the version of the compiled software.
+	Version string
+
+	id, _ = os.Hostname()
+)
+
 func main() {
 	// init dependencies
 	cfg := newConfig()
@@ -25,6 +33,8 @@ func main() {
 	if err != nil {
 		l.Fatal("failed to create logger", zap.Error(err))
 	}
+	l = l.With(zap.String("service.id", id), zap.String("service.version", Version))
+
 	systemHTTPServer := httpprovider.New(l, cfg.HTTPAddress, nil)
 	r := mux.NewRouter()
 
