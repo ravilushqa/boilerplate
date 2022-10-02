@@ -19,14 +19,14 @@ type ErrorResponse struct {
 	Error string `json:"error"`
 }
 
-type server struct {
+type Server struct {
 	l      *zap.Logger
 	router *mux.Router
 	srv    *http.Server
 }
 
-func New(l *zap.Logger, router *mux.Router, addr string) *server {
-	s := &server{l: l, router: router}
+func New(l *zap.Logger, router *mux.Router, addr string) *Server {
+	s := &Server{l: l, router: router}
 	s.routes()
 	s.srv = &http.Server{
 		Addr:         addr,
@@ -37,26 +37,27 @@ func New(l *zap.Logger, router *mux.Router, addr string) *server {
 	return s
 }
 
-func (s *server) Run(ctx context.Context) error {
+func (s *Server) Run(ctx context.Context) error {
 	go func() {
 		<-ctx.Done()
+		s.l.Info("[HTTP] server stopping", zap.String("addr", s.srv.Addr))
 		err := s.srv.Shutdown(ctx)
 		if err != nil {
-			return
+			s.l.Error("[HTTP] server shutdown error", zap.Error(err))
 		}
 	}()
-	s.l.Info("Starting app http server", zap.String("addr", s.srv.Addr))
+	s.l.Info("[HTTP] server listening", zap.String("addr", s.srv.Addr))
 	if err := s.srv.ListenAndServe(); err != http.ErrServerClosed {
 		return err
 	}
 	return nil
 }
 
-func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.router.ServeHTTP(w, r)
 }
 
-func (s *server) handleGreet() http.HandlerFunc {
+func (s *Server) handleGreet() http.HandlerFunc {
 	type request struct {
 		Name string
 	}
@@ -80,7 +81,7 @@ func (s *server) handleGreet() http.HandlerFunc {
 	}
 }
 
-func (s *server) respond(w http.ResponseWriter, _ *http.Request, status int, data interface{}) {
+func (s *Server) respond(w http.ResponseWriter, _ *http.Request, status int, data interface{}) {
 	w.WriteHeader(status)
 	if data != nil {
 		if err := json.NewEncoder(w).Encode(data); err != nil {
@@ -89,6 +90,6 @@ func (s *server) respond(w http.ResponseWriter, _ *http.Request, status int, dat
 	}
 }
 
-func (s *server) decode(_ http.ResponseWriter, r *http.Request, v interface{}) error {
+func (s *Server) decode(_ http.ResponseWriter, r *http.Request, v interface{}) error {
 	return json.NewDecoder(r.Body).Decode(v)
 }
