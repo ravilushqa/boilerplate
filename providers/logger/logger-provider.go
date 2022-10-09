@@ -12,7 +12,7 @@ func New(environment, level string) (*zap.Logger, error) {
 	_ = atom.UnmarshalText([]byte(level))
 	lcfg.Level = atom
 
-	if environment == "development" {
+	if environment == "development" || environment == "test" {
 		lcfg = zap.NewDevelopmentConfig()
 		lcfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	}

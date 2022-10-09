@@ -22,8 +22,7 @@ import (
 var (
 	// Version is the version of the compiled software.
 	Version string
-
-	id, _ = os.Hostname()
+	id, _   = os.Hostname()
 )
 
 func main() {

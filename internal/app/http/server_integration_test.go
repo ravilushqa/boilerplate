@@ -10,7 +10,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
+
+	loggerprovider "github.com/ravilushqa/boilerplate/providers/logger"
 )
 
 const (
@@ -18,8 +19,12 @@ const (
 	srvAddr = ":8080"
 )
 
-func Test_server(t *testing.T) {
-	s := New(zap.NewNop(), mux.NewRouter(), srvAddr)
+func Test_server_integration(t *testing.T) {
+	l, err := loggerprovider.New("test", "debug")
+	if err != nil {
+		return
+	}
+	s := New(l, mux.NewRouter(), srvAddr)
 	ctx, cancel := context.WithCancel(context.Background())
 
 	wg := &sync.WaitGroup{}
@@ -37,7 +42,7 @@ func Test_server(t *testing.T) {
 
 	t.Run("greet", func(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
-			resp, err := http.Post(addr+"/greet", "application/json", bytes.NewBuffer([]byte(`{"name":"Ravilushqa"}`)))
+			resp, err := http.Post(addr+"/greet", "application/json", bytes.NewBuffer([]byte(`{"name":"World"}`)))
 			require.NoError(t, err)
 			defer resp.Body.Close()
 
@@ -47,7 +52,7 @@ func Test_server(t *testing.T) {
 			}
 			err = json.NewDecoder(resp.Body).Decode(&respBody)
 			require.NoError(t, err)
-			require.Equal(t, "Hello Ravilushqa", respBody.Greeting)
+			require.Equal(t, "Hello World", respBody.Greeting)
 		})
 		t.Run("failure", func(t *testing.T) {
 			resp, err := http.Post(addr+"/greet", "application/json", bytes.NewBuffer([]byte(`{"name":""}`)))

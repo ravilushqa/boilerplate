@@ -13,17 +13,13 @@ jobs:
     environment: "personal"
     runs-on: ubuntu-latest
     steps:
-      -
-        name: Checkout
+      - name: Checkout
         uses: actions/checkout@v3
-      -
-        name: Set up QEMU
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
-      -
-        name: Set up Docker Buildx
+      - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-      -
-        name: Login to DockerHub
+      - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -35,15 +31,13 @@ jobs:
           images: |
             ${{ github.repository }}
             ghcr.io/${{ github.repository }}
-      -
-        name: Login to GitHub Container Registry
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      -
-        name: Build and push
+      - name: Build and push
         env:
           USERNAME: ${{ github.actor }}
         uses: docker/build-push-action@v3
@@ -61,6 +55,10 @@ jobs:
           node-version: '14'
 
       - name: Deploy to caprover
-        if: ${{ github.ref == 'refs/heads/main' }}
+        env:
+          GITHUB_REF: ${{ github.ref}}
+        if: startsWith(github.ref, 'refs/tags/v')
         run:
-          npm install -g caprover && caprover deploy -h 'https://captain.ravilushqa.dev' -p '${{ secrets.CAPROVER_PASSWORD }}' -i 'ghcr.io/${{ github.repository }}:main' -a ${{ github.event.repository.name }}
+          ref="$(echo ${GITHUB_REF} | cut -d'/' -f3)"
+          echo "GITHUB_REF=${GITHUB_REF}"
+          npm install -g caprover && caprover deploy -h 'https://captain.ravilushqa.dev' -p '${{ secrets.CAPROVER_PASSWORD }}' -i 'ghcr.io/${{ github.repository }}:${ref}' -a ${{ github.event.repository.name }}
