@@ -58,7 +58,8 @@ jobs:
         env:
           GITHUB_REF: ${{ github.ref}}
         if: startsWith(github.ref, 'refs/tags/v')
-        run:
+        run: |
           ref="$(echo ${GITHUB_REF} | cut -d'/' -f3)"
           echo "GITHUB_REF=${GITHUB_REF}"
-          npm install -g caprover && caprover deploy -h 'https://captain.ravilushqa.dev' -p '${{ secrets.CAPROVER_PASSWORD }}' -i 'ghcr.io/${{ github.repository }}:${ref}' -a ${{ github.event.repository.name }}
+          npm install -g caprover
+          caprover deploy -h 'https://captain.ravilushqa.dev' -p '${{ secrets.CAPROVER_PASSWORD }}' -i 'ghcr.io/${{ github.repository }}:${ref}' -a ${{ github.event.repository.name }}
