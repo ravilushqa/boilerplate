@@ -1,14 +1,21 @@
-.PHONY: build lint test test-coverage helm-install protoc precommit help
-
+.PHONY: build init-tools lint test test-coverage helm-install protoc precommit help
+PROJECTPATH := $(shell git rev-parse --show-toplevel)
 VERSION=$(shell git describe --tags --always)
 
 # build
 build:
 	mkdir -p bin/ && go build -ldflags "-X main.Version=$(VERSION)" -o ./bin/app .
 
+.PHONY:
+init-tools: # Run this once to install tools required for development.
+	cd tools && \
+	go mod tidy && \
+	go mod verify && \
+	go generate -x -tags "tools"
+
 # run golangci-lint
-lint:
-	golangci-lint run --timeout=30m ./...
+lint: init-tools
+	./bin/golangci-lint run --timeout=30m ./...
 
 # run go test
 test:

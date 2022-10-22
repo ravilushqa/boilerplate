@@ -5,19 +5,15 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/ravilushqa/boilerplate/api"
-	loggerprovider "github.com/ravilushqa/boilerplate/providers/logger"
 )
 
 func TestServer_Greet(t *testing.T) {
-	l, err := loggerprovider.New("test", "debug")
-	if err != nil {
-		return
-	}
-	s := New(l, addr)
+	s := New(zap.NewNop(), addr)
 
 	// set up test cases
 	tests := []struct {

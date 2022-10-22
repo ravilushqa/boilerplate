@@ -9,8 +9,8 @@ import (
 type config struct {
 	Env            string `env:"ENV" envDefault:"development"`
 	LogLevel       string `env:"LOG_LEVEL" envDefault:"info"`
-	HTTPAddress    string `env:"HTTP_ADDRESS" envDefault:"0.0.0.0:8081"`
 	AppHTTPAddress string `env:"APP_HTTP_ADDRESS" envDefault:"0.0.0.0:8080"`
+	InfraPort      int    `env:"HTTP_ADDRESS" envDefault:"8081"`
 	GRPCAddress    string `env:"GRPC_ADDRESS" envDefault:":50051"`
 }
 

@@ -5,18 +5,13 @@ import (
 	"net/http"
 	"testing"
 
+	tests "github.com/gophermodz/http/httptest"
 	"github.com/gorilla/mux"
-
-	tests "github.com/ravilushqa/boilerplate/pkg/tests/httptest"
-	loggerprovider "github.com/ravilushqa/boilerplate/providers/logger"
+	"go.uber.org/zap"
 )
 
 func Test_server(t *testing.T) {
-	l, err := loggerprovider.New("test", "debug")
-	if err != nil {
-		return
-	}
-	h := New(l, mux.NewRouter(), "")
+	h := New(zap.NewNop(), mux.NewRouter(), "")
 	t.Run("greet", func(t *testing.T) {
 		scenarios := []tests.APIScenario{
 			{

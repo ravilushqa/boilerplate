@@ -6,11 +6,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/ravilushqa/boilerplate/api"
-	loggerprovider "github.com/ravilushqa/boilerplate/providers/logger"
 )
 
 const (
@@ -18,11 +18,7 @@ const (
 )
 
 func TestServer(t *testing.T) {
-	l, err := loggerprovider.New("test", "debug")
-	if err != nil {
-		return
-	}
-	s := New(l, addr)
+	s := New(zap.NewNop(), addr)
 	ctx, cancel := context.WithCancel(context.Background())
 	wg := &sync.WaitGroup{}
 	wg.Add(1)

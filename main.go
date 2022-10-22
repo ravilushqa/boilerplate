@@ -7,15 +7,15 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/gophermodz/http/httpinfra"
 	"github.com/gorilla/mux"
 	_ "go.uber.org/automaxprocs"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/ravilushqa/boilerplate/internal/app/grpc"
 	"github.com/ravilushqa/boilerplate/internal/app/http"
-	httpprovider "github.com/ravilushqa/boilerplate/providers/http"
-	loggerprovider "github.com/ravilushqa/boilerplate/providers/logger"
 )
 
 // go build -ldflags "-X main.Version=x.y.z"
@@ -29,17 +29,13 @@ func main() {
 	// init dependencies
 	cfg := newConfig()
 	l := initLogger(cfg)
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
 
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-	go func() {
-		s := <-sigCh
-		l.Info("received signal", zap.String("signal", s.String()))
-		cancel()
-	}()
-
-	systemHTTPServer := httpprovider.New(l, cfg.HTTPAddress, nil)
+	infraHTTPServer, err := httpinfra.New(ctx, l, httpinfra.WithPort(cfg.InfraPort), httpinfra.WithVersion(Version))
+	if err != nil {
+		return
+	}
 	r := mux.NewRouter()
 
 	appHTTPServer := http.New(l, r, cfg.AppHTTPAddress)
@@ -48,7 +44,7 @@ func main() {
 	// run application
 	g, gctx := errgroup.WithContext(ctx)
 	g.Go(func() error {
-		return systemHTTPServer.Run(gctx)
+		return infraHTTPServer.Run(gctx)
 	})
 	g.Go(func() error {
 		return appHTTPServer.Run(gctx)
@@ -69,7 +65,20 @@ func main() {
 }
 
 func initLogger(cfg *config) *zap.Logger {
-	l, err := loggerprovider.New(cfg.Env, cfg.LogLevel)
+	lcfg := zap.NewProductionConfig()
+	atom := zap.NewAtomicLevel()
+	_ = atom.UnmarshalText([]byte(cfg.LogLevel))
+	lcfg.Level = atom
+
+	if cfg.Env == "development" || cfg.Env == "test" {
+		lcfg = zap.NewDevelopmentConfig()
+		lcfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	}
+
+	l, err := lcfg.Build(zap.Hooks())
+	if err != nil {
+		panic(fmt.Sprintf("failed to create logger: %v", err))
+	}
 	if err != nil {
 		panic(fmt.Errorf("failed to init logger: %w", err))
 	}
