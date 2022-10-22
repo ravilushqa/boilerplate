@@ -11,8 +11,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
-
-	loggerprovider "github.com/ravilushqa/boilerplate/providers/logger"
+	"go.uber.org/zap"
 )
 
 const (
@@ -21,11 +20,7 @@ const (
 )
 
 func Test_server_integration(t *testing.T) {
-	l, err := loggerprovider.New("test", "debug")
-	if err != nil {
-		return
-	}
-	s := New(l, mux.NewRouter(), srvAddr)
+	s := New(zap.NewNop(), mux.NewRouter(), srvAddr)
 	ctx, cancel := context.WithCancel(context.Background())
 
 	wg := &sync.WaitGroup{}
