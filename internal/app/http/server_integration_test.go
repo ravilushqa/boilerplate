@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
@@ -34,6 +35,9 @@ func Test_server_integration(t *testing.T) {
 		cancel()
 		wg.Wait()
 	}()
+
+	// sleep for a second to let the server start
+	time.Sleep(time.Second)
 
 	t.Run("greet", func(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
