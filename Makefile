@@ -1,4 +1,4 @@
-.PHONY: build init-tools lint test test-coverage helm-install protoc precommit help
+.PHONY: build run init-tools lint test test-coverage helm-install protoc precommit help
 VERSION="v0.0.0"
 
 # if git is available and we are in a git repo, use git describe to get the version
@@ -12,7 +12,10 @@ endif
 build:
 	mkdir -p bin/ && go build -ldflags "-X main.Version=$(VERSION)" -o ./bin/app .
 
-.PHONY:
+# run application
+run: build
+	./bin/app
+
 # run this once to install tools required for development.
 init-tools:
 	cd tools && \
