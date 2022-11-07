@@ -42,6 +42,19 @@ func (p *Project) New(ctx context.Context, dir string, layout string, branch str
 	if err := repo.CopyTo(ctx, to, p.Path, []string{".git", ".github"}); err != nil {
 		return err
 	}
+
+	// replace substring in files in the chart folder, Makefile and README.md
+	base.ReplaceInFiles(
+		[]string{path.Join(to, "chart"), path.Join(to, "Makefile"), path.Join(to, "README.md")},
+		[]string{"boilerplate", p.Name},
+	)
+
+	// remove cmd folder
+	err := os.RemoveAll(path.Join(to, "cmd"))
+	if err != nil {
+		return err
+	}
+
 	base.Tree(to, dir)
 
 	fmt.Printf("\n🍺 Project creation succeeded %s\n", color.GreenString(p.Name))

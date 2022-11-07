@@ -109,3 +109,17 @@ func Tree(path string, dir string) {
 		return nil
 	})
 }
+
+func ReplaceInFiles(dir []string, replaces []string) {
+	for _, d := range dir {
+		_ = filepath.Walk(d, func(path string, info os.FileInfo, err error) error {
+			if err == nil && info != nil && !info.IsDir() {
+				if err := copyFile(path, path, replaces); err != nil {
+					log.Fatal(fmt.Sprintf("failed to replace in file %s: %v", path, err))
+				}
+			}
+			return nil
+		})
+	}
+
+}
