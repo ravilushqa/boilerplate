@@ -45,7 +45,7 @@ func (p *Project) New(ctx context.Context, dir string, layout string, branch str
 
 	// replace substring in files in the chart folder, Makefile and README.md
 	base.ReplaceInFiles(
-		[]string{path.Join(to, "chart"), path.Join(to, "Makefile"), path.Join(to, "README.md")},
+		[]string{path.Join(to, "chart"), path.Join(to, "Makefile")},
 		[]string{"boilerplate", p.Name},
 	)
 
