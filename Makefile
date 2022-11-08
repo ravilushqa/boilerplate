@@ -1,13 +1,23 @@
-.PHONY: build init-tools lint test test-coverage helm-install protoc precommit help
-PROJECTPATH := $(shell git rev-parse --show-toplevel)
-VERSION=$(shell git describe --tags --always)
+.PHONY: build run init-tools lint test test-coverage helm-install protoc precommit help
+VERSION="v0.0.0"
+
+# if git is available and we are in a git repo, use git describe to get the version
+ifneq ($(shell which git),)
+	ifneq ($(shell git rev-parse --is-inside-work-tree 2>/dev/null),)
+		VERSION=$(shell git describe --tags --always)
+	endif
+endif
 
 # build
 build:
 	mkdir -p bin/ && go build -ldflags "-X main.Version=$(VERSION)" -o ./bin/app .
 
-.PHONY:
-init-tools: # Run this once to install tools required for development.
+# run application
+run: build
+	./bin/app
+
+# run this once to install tools required for development.
+init-tools:
 	cd tools && \
 	go mod tidy && \
 	go mod verify && \
