@@ -7,9 +7,17 @@ metadata:
 spec:
   type: {{ .Values.service.type }}
   ports:
-    - port: {{ .Values.service.port }}
+    - name: infra
+      port: 8081
+      targetPort: infra
+      protocol: TCP
+    - name: http
+      port: 8080
       targetPort: http
       protocol: TCP
-      name: http
+    - name: grpc
+      port: 50051
+      targetPort: grpc
+      protocol: TCP
   selector:
     {{- include "boilerplate.selectorLabels" . | nindent 4 }}
