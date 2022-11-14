@@ -56,6 +56,17 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
+# create a certificate manager certificate (cert-manager required)
+certificate:
+  create: false
+  # the issuer used to issue the certificate
+  issuerRef:
+    kind: ClusterIssuer
+    name: self-signed
+  # the hostname / subject alternative names for the certificate
+  dnsNames:
+    - boilerplate
+
 resources:
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
