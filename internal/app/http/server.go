@@ -11,6 +11,8 @@ import (
 
 	"github.com/gorilla/mux"
 	"go.uber.org/zap"
+
+	"github.com/ravilushqa/boilerplate/internal/app/http/middlewares"
 )
 
 var (
@@ -30,6 +32,7 @@ type Server struct {
 func New(l *zap.Logger, router *mux.Router, addr string) *Server {
 	s := &Server{l: l, router: router}
 	s.routes()
+	s.router.Use(middlewares.NewLogging(l))
 	s.srv = &http.Server{
 		Addr:         addr,
 		Handler:      s,
