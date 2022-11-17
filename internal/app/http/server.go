@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"os"
+	"runtime"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -55,6 +57,24 @@ func (s *Server) Run(ctx context.Context) error {
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.router.ServeHTTP(w, r)
+}
+
+func (s *Server) handleRoot() http.HandlerFunc {
+	type response struct {
+		Message  string `json:"message"`
+		Hostname string `json:"hostname"`
+		MaxProcs int    `json:"max_procs"`
+		NumCPU   int    `json:"num_cpu"`
+	}
+	return func(w http.ResponseWriter, r *http.Request) {
+		hostname, _ := os.Hostname()
+		s.respond(w, r, http.StatusOK, response{
+			Message:  "Hello World",
+			Hostname: hostname,
+			MaxProcs: runtime.GOMAXPROCS(0),
+			NumCPU:   runtime.NumCPU(),
+		})
+	}
 }
 
 func (s *Server) handleGreet() http.HandlerFunc {
