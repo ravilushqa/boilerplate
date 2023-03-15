@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/gophermodz/http v0.1.2
 	github.com/gorilla/mux v1.8.0
-	github.com/grpc-ecosystem/go-grpc-middleware v1.3.0
+	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/stretchr/testify v1.8.2
