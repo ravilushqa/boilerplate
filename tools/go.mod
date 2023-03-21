@@ -2,7 +2,7 @@ module github.com/deliveryhero/dh-adtech-advertisers/tools
 
 go 1.18
 
-require github.com/golangci/golangci-lint v1.52.0
+require github.com/golangci/golangci-lint v1.52.1
 
 require (
 	4d63.com/gochecknoglobals v0.2.1 // indirect
