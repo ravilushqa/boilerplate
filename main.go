@@ -19,7 +19,6 @@ import (
 	"github.com/ravilushqa/boilerplate/internal/app/http"
 )
 
-// go build -ldflags "-X main.Version=x.y.z"
 var (
 	// Version is the version of the compiled software.
 	Version string
