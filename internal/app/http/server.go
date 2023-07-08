@@ -15,9 +15,7 @@ import (
 	"github.com/ravilushqa/boilerplate/internal/app/http/middlewares"
 )
 
-var (
-	errNameRequired = errors.New("name is required")
-)
+var errNameRequired = errors.New("name is required")
 
 type ErrorResponse struct {
 	Error string `json:"error"`
