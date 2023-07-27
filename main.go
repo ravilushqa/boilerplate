@@ -10,7 +10,7 @@ import (
 	"github.com/gophermodz/http/httpinfra"
 	"github.com/gorilla/mux"
 	"github.com/jessevdk/go-flags"
-	_ "go.uber.org/automaxprocs"
+	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"golang.org/x/sync/errgroup"
@@ -34,6 +34,11 @@ var opts struct {
 }
 
 func main() {
+	l := initLogger()
+	_, _ = maxprocs.Set(maxprocs.Logger(func(s string, i ...interface{}) {
+		l.Info(fmt.Sprintf(s, i...))
+	}))
+
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
@@ -44,8 +49,6 @@ func main() {
 		}
 		return
 	}
-
-	l := initLogger()
 
 	if err := run(ctx, l); err != nil {
 		l.Fatal("run failed", zap.Error(err))
