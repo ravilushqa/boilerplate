@@ -68,3 +68,13 @@ Create the name of the tls secret for secure port
 {{- $fullname := include "boilerplate.fullname" . -}}
 {{- default (printf "%s-tls" $fullname) .Values.tls.secretName }}
 {{- end }}
+
+{{/*
+App environment variables
+*/}}
+{{- define "boilerplate.env" -}}
+{{- range $key, $val := .Values.env }}
+- name: {{ $key | quote }}
+  value: {{ $val | quote }}
+{{- end }}
+{{- end }}
