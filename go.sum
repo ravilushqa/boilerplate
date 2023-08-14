@@ -162,6 +162,8 @@ github.com/googleapis/gax-go/v2 v2.0.4/go.mod h1:0Wqv26UfaUD9n4G6kQubkQ+KchISgw+
 github.com/googleapis/gax-go/v2 v2.0.5/go.mod h1:DWXyrwAJ9X0FpwwEdw+IPEYBICEFu5mhpdKc/us6bOk=
 github.com/gophermodz/http v0.1.2 h1:QguXVtOFvHa9rvOCOUfaMZWR2IvxrYJGB5rbrZauEjM=
 github.com/gophermodz/http v0.1.2/go.mod h1:dsCWfsPeGx6TwidkrNLyPhE6ZbeNmYDn9UNGxZ27VBI=
+github.com/gophermodz/http v0.2.0 h1:Kmv6k+4rMeRPykT/fnQ+wMFpl1luv0ClzpWooSMeEk0=
+github.com/gophermodz/http v0.2.0/go.mod h1:smVPQpWaQuWjblD83bxDLAiw8yoyghprSnTEiwOdx4A=
 github.com/gorilla/mux v1.8.0 h1:i40aqfkR1h2SlN9hojwV5ZA91wcXFOvkdNIeFDP5koI=
 github.com/gorilla/mux v1.8.0/go.mod h1:DVbg23sWSpFRCP0SfiEN6jmj59UnW/n46BH5rLB71So=
 github.com/grpc-ecosystem/go-grpc-middleware v1.4.0 h1:UH//fgunKIs4JdUbpDl1VZCDaL56wXCB/5+wF6uHfaI=
