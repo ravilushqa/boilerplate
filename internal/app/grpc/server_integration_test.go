@@ -2,11 +2,11 @@ package grpc
 
 import (
 	"context"
+	"log/slog"
 	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -18,7 +18,7 @@ const (
 )
 
 func TestServer(t *testing.T) {
-	s := New(zap.NewNop(), addr)
+	s := New(slog.Default(), addr)
 	ctx, cancel := context.WithCancel(context.Background())
 	wg := &sync.WaitGroup{}
 	wg.Add(1)

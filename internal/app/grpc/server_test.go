@@ -2,10 +2,10 @@ package grpc
 
 import (
 	"context"
+	"log/slog"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -13,7 +13,7 @@ import (
 )
 
 func TestServer_Greet(t *testing.T) {
-	s := New(zap.NewNop(), addr)
+	s := New(slog.Default(), addr)
 
 	// set up test cases
 	tests := []struct {

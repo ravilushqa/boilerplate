@@ -2,16 +2,16 @@ package http
 
 import (
 	"bytes"
+	"log/slog"
 	"net/http"
 	"testing"
 
 	tests "github.com/gophermodz/http/httptest"
 	"github.com/gorilla/mux"
-	"go.uber.org/zap"
 )
 
 func Test_server(t *testing.T) {
-	h := New(zap.NewNop(), mux.NewRouter(), "")
+	h := New(slog.Default(), mux.NewRouter(), "")
 	t.Run("greet", func(t *testing.T) {
 		scenarios := []tests.APIScenario{
 			{

@@ -3,16 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/gophermodz/http/httpinfra"
 	"github.com/gorilla/mux"
 	"github.com/jessevdk/go-flags"
+	"github.com/lmittmann/tint"
 	"go.uber.org/automaxprocs/maxprocs"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/ravilushqa/boilerplate/internal/app/grpc"
@@ -50,16 +51,15 @@ func main() {
 		return
 	}
 
-	if err := run(ctx, l); err != nil {
-		l.Fatal("run failed", zap.Error(err))
+	if err = run(ctx, l); err != nil {
+		l.Error("run failed", err)
 	}
-	_ = l.Sync()
 }
 
-func run(ctx context.Context, l *zap.Logger) error {
+func run(ctx context.Context, l *slog.Logger) error {
 	eg, ctx := errgroup.WithContext(ctx)
 
-	// HTTP
+	// HTTP`
 	r := mux.NewRouter()
 	httpServer := http.New(l, r, opts.HTTPAddress)
 	eg.Go(func() error {
@@ -81,24 +81,20 @@ func run(ctx context.Context, l *zap.Logger) error {
 	return eg.Wait()
 }
 
-func initLogger() *zap.Logger {
-	lcfg := zap.NewProductionConfig()
-	atom := zap.NewAtomicLevel()
-	_ = atom.UnmarshalText([]byte(opts.LogLevel))
-	lcfg.Level = atom
+func initLogger() *slog.Logger {
+	w := os.Stderr
 
+	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	})
 	if opts.Env == "development" || opts.Env == "test" {
-		lcfg = zap.NewDevelopmentConfig()
-		lcfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+		tint.NewHandler(w, &tint.Options{
+			Level:      slog.LevelDebug,
+			TimeFormat: time.Kitchen,
+		})
 	}
-
-	l, err := lcfg.Build(zap.Hooks())
-	if err != nil {
-		panic(fmt.Sprintf("failed to create logger: %v", err))
-	}
-	if err != nil {
-		panic(fmt.Errorf("failed to init logger: %w", err))
-	}
-	l = l.With(zap.String("id", id), zap.String("version", Version))
+	slog.SetDefault(slog.New(handler))
+	l := slog.New(slog.NewTextHandler(w, nil))
+	l = l.With("id", id, "version", Version)
 	return l
 }

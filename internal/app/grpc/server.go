@@ -2,13 +2,12 @@ package grpc
 
 import (
 	"context"
+	"log/slog"
 	"net"
 
 	grpcmiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpczap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	grpcrecovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	grpcprometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
-	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
@@ -19,11 +18,11 @@ import (
 
 type Server struct {
 	api.GreeterServer
-	l    *zap.Logger
+	l    *slog.Logger
 	addr string
 }
 
-func New(l *zap.Logger, addr string) *Server {
+func New(l *slog.Logger, addr string) *Server {
 	return &Server{l: l, addr: addr}
 }
 
@@ -36,12 +35,10 @@ func (s *Server) Run(ctx context.Context) error {
 	grpcSrv := grpc.NewServer(
 		grpc.StreamInterceptor(grpcmiddleware.ChainStreamServer(
 			grpcprometheus.StreamServerInterceptor,
-			grpczap.StreamServerInterceptor(s.l.Named("grpc_stream")),
 			grpcrecovery.StreamServerInterceptor(),
 		)),
 		grpc.UnaryInterceptor(grpcmiddleware.ChainUnaryServer(
 			grpcprometheus.UnaryServerInterceptor,
-			grpczap.UnaryServerInterceptor(s.l.Named("grpc_unary")),
 			grpcrecovery.UnaryServerInterceptor(),
 		)),
 	)
@@ -54,10 +51,10 @@ func (s *Server) Run(ctx context.Context) error {
 	go func() {
 		<-ctx.Done()
 		grpcSrv.GracefulStop()
-		s.l.Info("[GRPC] server stopping", zap.String("addr", s.addr))
+		s.l.Info("[GRPC] server stopping", slog.String("addr", s.addr))
 	}()
 
-	s.l.Info("[GRPC] server listening", zap.String("addr", s.addr))
+	s.l.Info("[GRPC] server listening", slog.String("addr", s.addr))
 
 	return grpcSrv.Serve(lis)
 }
