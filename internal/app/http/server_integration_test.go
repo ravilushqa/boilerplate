@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"sync"
 	"testing"
@@ -11,7 +12,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/require"
-	"go.uber.org/zap"
 )
 
 const (
@@ -20,7 +20,7 @@ const (
 )
 
 func Test_server_integration(t *testing.T) {
-	s := New(zap.NewNop(), mux.NewRouter(), srvAddr)
+	s := New(slog.Default(), mux.NewRouter(), srvAddr)
 	ctx, cancel := context.WithCancel(context.Background())
 
 	wg := &sync.WaitGroup{}

@@ -4,13 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 	"os"
 	"runtime"
 	"time"
 
 	"github.com/gorilla/mux"
-	"go.uber.org/zap"
 
 	"github.com/ravilushqa/boilerplate/internal/app/http/middlewares"
 )
@@ -22,12 +22,12 @@ type ErrorResponse struct {
 }
 
 type Server struct {
-	l      *zap.Logger
+	l      *slog.Logger
 	router *mux.Router
 	srv    *http.Server
 }
 
-func New(l *zap.Logger, router *mux.Router, addr string) *Server {
+func New(l *slog.Logger, router *mux.Router, addr string) *Server {
 	s := &Server{l: l, router: router}
 	s.routes()
 	s.router.Use(middlewares.NewLogging(l))
@@ -43,14 +43,14 @@ func New(l *zap.Logger, router *mux.Router, addr string) *Server {
 func (s *Server) Run(ctx context.Context) error {
 	go func() {
 		<-ctx.Done()
-		s.l.Info("[HTTP] server stopping", zap.String("addr", s.srv.Addr))
+		s.l.Info("[HTTP] server stopping", slog.String("addr", s.srv.Addr))
 		err := s.srv.Shutdown(ctx)
 		if err != nil {
-			s.l.Error("[HTTP] server shutdown error", zap.Error(err))
+			s.l.Error("[HTTP] server shutdown error", err)
 		}
 	}()
-	s.l.Info("[HTTP] server listening", zap.String("addr", s.srv.Addr))
-	if err := s.srv.ListenAndServe(); err != http.ErrServerClosed {
+	s.l.Info("[HTTP] server listening", slog.String("addr", s.srv.Addr))
+	if err := s.srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
 	return nil
@@ -88,7 +88,7 @@ func (s *Server) handleGreet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req request
 		if err := s.decode(w, r, &req); err != nil {
-			s.l.Error("failed to decode request", zap.Error(err))
+			s.l.Error("failed to decode request", err)
 			s.respond(w, r, http.StatusBadRequest, nil)
 			return
 		}
@@ -106,7 +106,7 @@ func (s *Server) respond(w http.ResponseWriter, _ *http.Request, status int, dat
 	w.WriteHeader(status)
 	if data != nil {
 		if err := json.NewEncoder(w).Encode(data); err != nil {
-			s.l.Error("failed to encode response", zap.Error(err))
+			s.l.Error("failed to encode response", err)
 		}
 	}
 }
