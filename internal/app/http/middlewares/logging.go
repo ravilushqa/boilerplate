@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-	"go.uber.org/zap"
 )
 
 func NewLogging(l *slog.Logger) mux.MiddlewareFunc {
@@ -19,7 +18,7 @@ func NewLogging(l *slog.Logger) mux.MiddlewareFunc {
 				"request",
 				slog.String("method", r.Method),
 				slog.String("path", r.URL.Path),
-				zap.Duration("duration", time.Since(start)),
+				slog.Duration("duration", time.Since(start)),
 				slog.String("remote_addr", r.RemoteAddr),
 			)
 		})
