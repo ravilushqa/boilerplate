@@ -1,9 +1,11 @@
 module github.com/ravilushqa/boilerplate
 
-go 1.20
+go 1.21
+
+toolchain go1.21.0
 
 require (
-	github.com/gophermodz/http v0.1.2
+	github.com/gophermodz/http v0.2.0
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
