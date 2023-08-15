@@ -35,11 +35,6 @@ var opts struct {
 }
 
 func main() {
-	l := initLogger()
-	_, _ = maxprocs.Set(maxprocs.Logger(func(s string, i ...interface{}) {
-		l.Info(fmt.Sprintf(s, i...))
-	}))
-
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
@@ -51,8 +46,13 @@ func main() {
 		return
 	}
 
+	l := initLogger()
+	_, _ = maxprocs.Set(maxprocs.Logger(func(s string, i ...interface{}) {
+		l.Info(fmt.Sprintf(s, i...))
+	}))
+
 	if err = run(ctx, l); err != nil {
-		l.Error("run failed", err)
+		l.Error("run failed", tint.Err(err))
 	}
 }
 
@@ -84,17 +84,20 @@ func run(ctx context.Context, l *slog.Logger) error {
 func initLogger() *slog.Logger {
 	w := os.Stderr
 
-	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+	var handler slog.Handler
+	handler = slog.NewJSONHandler(w, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	})
 	if opts.Env == "development" || opts.Env == "test" {
-		tint.NewHandler(w, &tint.Options{
+		handler = tint.NewHandler(w, &tint.Options{
 			Level:      slog.LevelDebug,
 			TimeFormat: time.Kitchen,
 		})
 	}
+
+	handler = handler.WithAttrs([]slog.Attr{slog.String("id", id), slog.String("version", Version)})
+
 	slog.SetDefault(slog.New(handler))
-	l := slog.New(slog.NewTextHandler(w, nil))
-	l = l.With("id", id, "version", Version)
-	return l
+
+	return slog.With("id", id, "version", Version)
 }

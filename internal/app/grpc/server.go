@@ -48,15 +48,21 @@ func (s *Server) Run(ctx context.Context) error {
 
 	reflection.Register(grpcSrv)
 
-	go func() {
-		<-ctx.Done()
-		grpcSrv.GracefulStop()
+	stopc := make(chan struct{})
+	context.AfterFunc(ctx, func() {
+		defer close(stopc)
 		s.l.Info("[GRPC] server stopping", slog.String("addr", s.addr))
-	}()
+		grpcSrv.GracefulStop()
+	})
 
 	s.l.Info("[GRPC] server listening", slog.String("addr", s.addr))
 
-	return grpcSrv.Serve(lis)
+	if err = grpcSrv.Serve(lis); err != nil {
+		return err
+	}
+
+	<-stopc
+	return nil
 }
 
 func (s *Server) Greet(_ context.Context, r *api.GreetRequest) (*api.GreetResponse, error) {

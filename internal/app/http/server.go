@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/lmittmann/tint"
 
 	"github.com/ravilushqa/boilerplate/internal/app/http/middlewares"
 )
@@ -41,18 +42,19 @@ func New(l *slog.Logger, router *mux.Router, addr string) *Server {
 }
 
 func (s *Server) Run(ctx context.Context) error {
-	go func() {
-		<-ctx.Done()
+	stopc := make(chan struct{})
+	context.AfterFunc(ctx, func() {
+		defer close(stopc)
 		s.l.Info("[HTTP] server stopping", slog.String("addr", s.srv.Addr))
-		err := s.srv.Shutdown(ctx)
-		if err != nil {
-			s.l.Error("[HTTP] server shutdown error", err)
+		if err := s.srv.Shutdown(ctx); err != nil {
+			s.l.Error("[HTTP] server shutdown error", tint.Err(err))
 		}
-	}()
+	})
 	s.l.Info("[HTTP] server listening", slog.String("addr", s.srv.Addr))
 	if err := s.srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}
+	<-stopc
 	return nil
 }
 
@@ -88,7 +90,7 @@ func (s *Server) handleGreet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req request
 		if err := s.decode(w, r, &req); err != nil {
-			s.l.Error("failed to decode request", err)
+			s.l.Error("failed to decode request", tint.Err(err))
 			s.respond(w, r, http.StatusBadRequest, nil)
 			return
 		}
@@ -106,7 +108,7 @@ func (s *Server) respond(w http.ResponseWriter, _ *http.Request, status int, dat
 	w.WriteHeader(status)
 	if data != nil {
 		if err := json.NewEncoder(w).Encode(data); err != nil {
-			s.l.Error("failed to encode response", err)
+			s.l.Error("failed to encode response", tint.Err(err))
 		}
 	}
 }
