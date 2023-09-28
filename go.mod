@@ -10,12 +10,12 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/jessevdk/go-flags v1.5.0
-	github.com/lmittmann/tint v1.0.0
+	github.com/lmittmann/tint v1.0.2
 	github.com/stretchr/testify v1.8.4
 	go.uber.org/automaxprocs v1.5.3
 	go.uber.org/goleak v1.2.1
 	golang.org/x/sync v0.3.0
-	google.golang.org/grpc v1.57.0
+	google.golang.org/grpc v1.58.2
 	google.golang.org/protobuf v1.31.0
 )
 
