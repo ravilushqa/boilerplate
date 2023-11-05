@@ -6,7 +6,7 @@ toolchain go1.21.0
 
 require (
 	github.com/gophermodz/http v0.2.0
-	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/jessevdk/go-flags v1.5.0
