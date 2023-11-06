@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
-	github.com/fatih/color v1.15.0
+	github.com/fatih/color v1.16.0
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.7.0 // indirect
 	golang.org/x/mod v0.14.0
