@@ -8,6 +8,7 @@ require (
 	github.com/gophermodz/http v0.2.0
 	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.1.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/jessevdk/go-flags v1.6.1
 	github.com/lmittmann/tint v1.0.4
