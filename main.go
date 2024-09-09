@@ -35,14 +35,6 @@ var opts struct {
 }
 
 func main() {
-	l := initLogger()
-	_, _ = maxprocs.Set(maxprocs.Logger(func(s string, i ...interface{}) {
-		l.Info(fmt.Sprintf(s, i...))
-	}))
-
-	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer cancel()
-
 	_, err := flags.Parse(&opts)
 	if err != nil {
 		if err.(*flags.Error).Type != flags.ErrHelp {
@@ -50,6 +42,14 @@ func main() {
 		}
 		return
 	}
+
+	l := initLogger()
+	_, _ = maxprocs.Set(maxprocs.Logger(func(s string, i ...interface{}) {
+		l.Info(fmt.Sprintf(s, i...))
+	}))
+
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
 
 	if err = run(ctx, l); err != nil {
 		l.Error("run failed", err)
@@ -84,17 +84,28 @@ func run(ctx context.Context, l *slog.Logger) error {
 func initLogger() *slog.Logger {
 	w := os.Stderr
 
-	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+	var handler slog.Handler
+
+	// Default handler using JSON format
+	handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
 	})
+
+	// Check if environment is development or test
 	if opts.Env == "development" || opts.Env == "test" {
-		tint.NewHandler(w, &tint.Options{
+		// Override handler with tint handler for development/test
+		handler = tint.NewHandler(w, &tint.Options{
 			Level:      slog.LevelDebug,
 			TimeFormat: time.Kitchen,
 		})
 	}
+
+	// Set the default logger using the selected handler
 	slog.SetDefault(slog.New(handler))
-	l := slog.New(slog.NewTextHandler(w, nil))
-	l = l.With("id", id, "version", Version)
+	slog.With(slog.String("id", id), slog.String("version", Version), slog.String("env", opts.Env))
+
+	l := slog.New(handler)
+	l.With(slog.String("id", id), slog.String("version", Version), slog.String("env", opts.Env))
+
 	return l
 }
