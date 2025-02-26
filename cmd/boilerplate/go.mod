@@ -8,7 +8,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/fatih/color v1.18.0
 	github.com/spf13/cobra v1.9.1
-	golang.org/x/mod v0.22.0
+	golang.org/x/mod v0.23.0
 )
 
 require (
