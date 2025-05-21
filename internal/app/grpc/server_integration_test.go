@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
@@ -33,11 +34,20 @@ func TestServer(t *testing.T) {
 		wg.Wait()
 	}()
 
-	t.Run("greet", func(t *testing.T) {
-		cc, err := grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-		require.NoError(t, err)
-		defer cc.Close()
+	// Wait for server to be ready by attempting to connect a few times
+	var cc *grpc.ClientConn
+	var err error
+	for i := 0; i < 10; i++ { // Increased retries slightly
+		cc, err = grpc.Dial(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err == nil {
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	require.NoError(t, err, "failed to connect to gRPC server after multiple retries")
+	defer cc.Close()
 
+	t.Run("greet", func(t *testing.T) {
 		c := api.NewGreeterClient(cc)
 		resp, err := c.Greet(ctx, &api.GreetRequest{Name: "World"})
 		require.NoError(t, err)
