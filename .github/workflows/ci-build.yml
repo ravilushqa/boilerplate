@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
@@ -52,13 +52,4 @@ jobs:
       - name: Set up npm
         uses: actions/setup-node@v3
         with:
-          node-version: '14'
-
-      - name: Deploy to caprover
-        env:
-          GITHUB_REF: ${{ github.ref }}
-        if: startsWith(github.ref, 'refs/tags/v')
-        run: |
-          ref="$(echo ${GITHUB_REF} | cut -d'/' -f3)"
-          npm install -g caprover
-          caprover deploy -h 'https://captain.ravilushqa.dev' -p '${{ secrets.CAPROVER_PASSWORD }}' -i ghcr.io/${{ github.repository }}:${ref} -a ${{ github.event.repository.name }}
+          node-version: '20.x'

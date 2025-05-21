@@ -37,13 +37,18 @@ var opts struct {
 func main() {
 	_, err := flags.Parse(&opts)
 	if err != nil {
-		if err.(*flags.Error).Type != flags.ErrHelp {
-			panic(err)
+		if fe, ok := err.(*flags.Error); ok && fe.Type == flags.ErrHelp {
+			// Help message requested, standard exit
+			return
 		}
-		return
+		// For other flag errors, log and exit
+		slog.Error("failed to parse flags", "error", err)
+		os.Exit(1)
 	}
 
 	l := initLogger()
+	slog.SetDefault(l) // Ensure default logger is set early
+
 	_, _ = maxprocs.Set(maxprocs.Logger(func(s string, i ...interface{}) {
 		l.Info(fmt.Sprintf(s, i...))
 	}))
@@ -52,7 +57,8 @@ func main() {
 	defer cancel()
 
 	if err = run(ctx, l); err != nil {
-		l.Error("run failed", err)
+		l.Error("application run failed", "error", err)
+		os.Exit(1)
 	}
 }
 
@@ -87,25 +93,46 @@ func initLogger() *slog.Logger {
 	var handler slog.Handler
 
 	// Default handler using JSON format
-	handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelInfo,
-	})
+	logLevel := new(slog.LevelVar)
+	switch opts.LogLevel {
+	case "debug":
+		logLevel.Set(slog.LevelDebug)
+	case "info":
+		logLevel.Set(slog.LevelInfo)
+	case "warn":
+		logLevel.Set(slog.LevelWarn)
+	case "error":
+		logLevel.Set(slog.LevelError)
+	default:
+		logLevel.Set(slog.LevelInfo) // Default to Info
+	}
+
+	handlerOpts := &slog.HandlerOptions{Level: logLevel}
+	handler = slog.NewJSONHandler(os.Stdout, handlerOpts)
 
 	// Check if environment is development or test
 	if opts.Env == "development" || opts.Env == "test" {
 		// Override handler with tint handler for development/test
-		handler = tint.NewHandler(w, &tint.Options{
-			Level:      slog.LevelDebug,
+		// Ensure tint also respects the LogLevel opt
+		tintOptions := &tint.Options{
+			Level:      logLevel,
 			TimeFormat: time.Kitchen,
-		})
+		}
+		if opts.LogLevel == "debug" { // tint has more verbose debug if not specified
+			tintOptions.Level = slog.LevelDebug
+		}
+		handler = tint.NewHandler(w, tintOptions)
 	}
 
-	// Set the default logger using the selected handler
-	slog.SetDefault(slog.New(handler))
-	slog.With(slog.String("id", id), slog.String("version", Version), slog.String("env", opts.Env))
+	// Create logger with common attributes
+	l := slog.New(handler).With(
+		slog.String("id", id),
+		slog.String("version", Version),
+		slog.String("env", opts.Env),
+	)
 
-	l := slog.New(handler)
-	l.With(slog.String("id", id), slog.String("version", Version), slog.String("env", opts.Env))
+	// Set the default logger
+	slog.SetDefault(l)
 
 	return l
 }

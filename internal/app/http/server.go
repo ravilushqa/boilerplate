@@ -46,7 +46,7 @@ func (s *Server) Run(ctx context.Context) error {
 		s.l.Info("[HTTP] server stopping", slog.String("addr", s.srv.Addr))
 		err := s.srv.Shutdown(ctx)
 		if err != nil {
-			s.l.Error("[HTTP] server shutdown error", err)
+			s.l.Error("[HTTP] server shutdown error", "error", err)
 		}
 	}()
 	s.l.Info("[HTTP] server listening", slog.String("addr", s.srv.Addr))
@@ -88,7 +88,7 @@ func (s *Server) handleGreet() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req request
 		if err := s.decode(w, r, &req); err != nil {
-			s.l.Error("failed to decode request", err)
+			s.l.Error("failed to decode request", "error", err)
 			s.respond(w, r, http.StatusBadRequest, nil)
 			return
 		}
@@ -106,7 +106,7 @@ func (s *Server) respond(w http.ResponseWriter, _ *http.Request, status int, dat
 	w.WriteHeader(status)
 	if data != nil {
 		if err := json.NewEncoder(w).Encode(data); err != nil {
-			s.l.Error("failed to encode response", err)
+			s.l.Error("failed to encode response", "error", err)
 		}
 	}
 }
