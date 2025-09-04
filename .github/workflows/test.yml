@@ -19,7 +19,7 @@ jobs:
   test-coverage:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - uses: actions/setup-go@v4
         with:
           go-version-file: go.mod
@@ -37,7 +37,7 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ matrix.go-version }}
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - run: make test
 
   test-cache:
@@ -46,7 +46,7 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: 1.25.x
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - uses: actions/cache@v3
         with:
           # In order:
