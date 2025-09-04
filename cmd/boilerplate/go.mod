@@ -2,7 +2,7 @@ module github.com/ravilushqa/boilerplate/cmd/boilerplate
 
 go 1.23.0
 
-toolchain go1.24.6
+toolchain go1.25.1
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
