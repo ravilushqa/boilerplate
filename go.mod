@@ -2,7 +2,7 @@ module github.com/ravilushqa/boilerplate
 
 go 1.22.7
 
-toolchain go1.24.6
+toolchain go1.25.1
 
 require (
 	github.com/gophermodz/http v0.2.0
