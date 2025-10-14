@@ -2,7 +2,7 @@ module github.com/deliveryhero/dh-adtech-advertisers/tools
 
 go 1.23.0
 
-toolchain go1.25.1
+toolchain go1.25.3
 
 require github.com/golangci/golangci-lint v1.64.8
 
