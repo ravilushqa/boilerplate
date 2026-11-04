@@ -35,7 +35,7 @@ jobs:
 
       - name: Generate a project from this commit
         run: |
-          go install ./cmd/boilerplate
+          (cd cmd/boilerplate && go install .)
           git config --global user.email ci@example.com
           git config --global user.name CI
           git switch -c e2e
