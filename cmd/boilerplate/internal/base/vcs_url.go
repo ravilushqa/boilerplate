@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/url"
 	"regexp"
+	"slices"
 	"strings"
 )
 
@@ -49,10 +50,9 @@ func ParseVCSUrl(repo string) (*url.URL, error) {
 	// Iterate over insecure schemes too, because this function simply
 	// reports the state of the repo. If we can't see insecure schemes then
 	// we can't report the actual repo URL.
-	for _, s := range scheme {
-		if repoURL.Scheme == s {
-			return repoURL, nil
-		}
+	if slices.Contains(scheme, repoURL.Scheme) {
+		return repoURL, nil
 	}
+
 	return nil, errors.New("unable to parse repo url")
 }

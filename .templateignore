@@ -1,0 +1,7 @@
+# Paths that belong to the template repository only.
+# `boilerplate new` removes them from generated projects.
+cmd/boilerplate
+.github/workflows/cli.yml
+.github/workflows/release.yml
+.github/workflows/gpt_pullrequest_updater.yml
+docs/template.md

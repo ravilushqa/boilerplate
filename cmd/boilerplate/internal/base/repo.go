@@ -37,13 +37,14 @@ func repoDir(url string) string {
 	return url
 }
 
-// NewRepo new a repository manager.
-func NewRepo(url string, branch string) *Repo {
-	return &Repo{
-		url:    url,
-		home:   boilerplateHomeWithDir("repo/" + repoDir(url)),
-		branch: branch,
+// NewRepo returns a manager for the repository at url, cached under ~/.boilerplate.
+func NewRepo(url, branch string) (*Repo, error) {
+	home, err := cacheDir("repo/" + repoDir(url))
+	if err != nil {
+		return nil, fmt.Errorf("create cache directory: %w", err)
 	}
+
+	return &Repo{url: url, home: home, branch: branch}, nil
 }
 
 // Path returns the repository cache path.
@@ -66,14 +67,13 @@ func (r *Repo) Path() string {
 func (r *Repo) Pull(ctx context.Context) error {
 	cmd := exec.CommandContext(ctx, "git", "symbolic-ref", "HEAD")
 	cmd.Dir = r.Path()
-	_, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil
+	if _, err := cmd.CombinedOutput(); err != nil {
+		return nil //nolint:nilerr // detached HEAD (tag or commit): nothing to pull
 	}
 	cmd = exec.CommandContext(ctx, "git", "pull")
 	cmd.Dir = r.Path()
 	out, err := cmd.CombinedOutput()
-	fmt.Println(string(out))
+	fmt.Fprint(os.Stderr, string(out))
 	if err != nil {
 		return err
 	}
@@ -87,12 +87,12 @@ func (r *Repo) Clone(ctx context.Context) error {
 	}
 	var cmd *exec.Cmd
 	if r.branch == "" {
-		cmd = exec.CommandContext(ctx, "git", "clone", r.url, r.Path())
+		cmd = exec.CommandContext(ctx, "git", "clone", r.url, r.Path()) //nolint:gosec // the user chooses the repository
 	} else {
-		cmd = exec.CommandContext(ctx, "git", "clone", "-b", r.branch, r.url, r.Path())
+		cmd = exec.CommandContext(ctx, "git", "clone", "-b", r.branch, r.url, r.Path()) //nolint:gosec // the user chooses the repository
 	}
 	out, err := cmd.CombinedOutput()
-	fmt.Println(string(out))
+	fmt.Fprint(os.Stderr, string(out))
 	if err != nil {
 		return err
 	}
@@ -100,7 +100,7 @@ func (r *Repo) Clone(ctx context.Context) error {
 }
 
 // CopyTo copies the repository to project path.
-func (r *Repo) CopyTo(ctx context.Context, to string, modPath string, ignores []string) error {
+func (r *Repo) CopyTo(ctx context.Context, to, modPath string, ignores []string) error {
 	if err := r.Clone(ctx); err != nil {
 		return err
 	}
@@ -112,7 +112,7 @@ func (r *Repo) CopyTo(ctx context.Context, to string, modPath string, ignores []
 }
 
 // CopyToV2 copies the repository to project path
-func (r *Repo) CopyToV2(ctx context.Context, to string, modPath string, ignores, replaces []string) error {
+func (r *Repo) CopyToV2(ctx context.Context, to, modPath string, ignores, replaces []string) error {
 	if err := r.Clone(ctx); err != nil {
 		return err
 	}

@@ -1,11 +1,7 @@
 package base
 
 import (
-	"bufio"
-	"bytes"
 	"os"
-	"os/exec"
-	"strings"
 
 	"golang.org/x/mod/modfile"
 )
@@ -17,27 +13,4 @@ func ModulePath(filename string) (string, error) {
 		return "", err
 	}
 	return modfile.ModulePath(modBytes), nil
-}
-
-// ModuleVersion returns module version.
-func ModuleVersion(path string) (string, error) {
-	stdout := &bytes.Buffer{}
-	fd := exec.Command("go", "mod", "graph")
-	fd.Stdout = stdout
-	fd.Stderr = stdout
-	if err := fd.Run(); err != nil {
-		return "", err
-	}
-	rd := bufio.NewReader(stdout)
-	for {
-		line, _, err := rd.ReadLine()
-		if err != nil {
-			return "", err
-		}
-		str := string(line)
-		i := strings.Index(str, "@")
-		if strings.Contains(str, path+"@") && i != -1 {
-			return path + str[i:], nil
-		}
-	}
 }

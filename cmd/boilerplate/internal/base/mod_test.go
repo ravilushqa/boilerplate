@@ -2,42 +2,24 @@ package base
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 )
 
-func TestModuleVersion(t *testing.T) {
-	v, err := ModuleVersion("golang.org/x/mod")
-	if err != nil {
-		t.Fatal(err)
-	}
-	t.Log(v)
-}
-
 func TestModulePath(t *testing.T) {
-	if err := os.Mkdir("/tmp/test_mod", os.ModePerm); err != nil {
+	t.Parallel()
+
+	file := filepath.Join(t.TempDir(), "go.mod")
+	if err := os.WriteFile(file, []byte("module github.com/ravilushqa/boilerplate\n\ngo 1.27.0\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 
-	defer os.RemoveAll("/tmp/test_mod")
-
-	f, err := os.Create("/tmp/test_mod/go.mod")
+	got, err := ModulePath(file)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	mod := `module github.com/ravilushqa/boilerplate/
-
-go 1.16`
-	_, err = f.WriteString(mod)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	p, err := ModulePath("/tmp/test_mod/go.mod")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if p != "github.com/ravilushqa/boilerplate/" {
-		t.Fatalf("want: %s, got: %s", "module github.com/ravilushqa/boilerplate/", p)
+	if want := "github.com/ravilushqa/boilerplate"; got != want {
+		t.Fatalf("want %q, got %q", want, got)
 	}
 }

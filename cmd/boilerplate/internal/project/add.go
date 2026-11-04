@@ -3,61 +3,47 @@ package project
 import (
 	"context"
 	"fmt"
-	"os"
+	"io"
 	"path"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 
 	"github.com/ravilushqa/boilerplate/cmd/boilerplate/internal/base"
 )
 
+// repoAddIgnores are template files that make no sense inside an existing module.
 var repoAddIgnores = []string{
-	".git", ".github", "api", "README.md", "LICENSE", "go.mod", "go.sum", "third_party", "openapi.yaml", ".gitignore",
+	".git", ".github", ".claude", "api", "README.md", "AGENTS.md", "CLAUDE.md", "LICENSE",
+	"go.mod", "go.sum", "tools", "buf.yaml", "buf.gen.yaml", ".golangci.yml", "renovate.json", ".gitignore",
 }
 
-func (p *Project) Add(ctx context.Context, dir string, layout string, branch string, mod string) error {
+// Add adds the service into the existing Go module mod.
+func (p *Project) Add(ctx context.Context, in io.Reader, out io.Writer, dir, mod string, opts options) error {
 	to := path.Join(dir, p.Path)
 
-	if _, err := os.Stat(to); !os.IsNotExist(err) {
-		fmt.Printf("🚫 %s already exists\n", p.Name)
-		override := false
-		prompt := &survey.Confirm{
-			Message: "📂 Do you want to override the folder ?",
-			Help:    "Delete the existing folder and create the project.",
-		}
-		e := survey.AskOne(prompt, &override)
-		if e != nil {
-			return e
-		}
-		if !override {
-			return err
-		}
-		os.RemoveAll(to)
+	if err := prepareDir(in, out, to, opts.force); err != nil {
+		return err
 	}
 
-	fmt.Printf("🚀 Add service %s, layout repo is %s, please wait a moment.\n\n", p.Name, layout)
+	_, _ = fmt.Fprintf(out, "🚀 Adding service %s from %s, please wait a moment.\n\n", p.Name, opts.repoURL)
 
-	repo := base.NewRepo(layout, branch)
+	repo, err := base.NewRepo(opts.repoURL, opts.branch)
+	if err != nil {
+		return err
+	}
 
 	if err := repo.CopyToV2(ctx, to, path.Join(mod, p.Path), repoAddIgnores, []string{path.Join(p.Path, "api"), "api"}); err != nil {
 		return err
 	}
 
-	// remove cmd folder
-	err := os.RemoveAll(path.Join(to, "cmd"))
-	if err != nil {
+	if err := base.RemoveTemplateOnly(to); err != nil {
 		return err
 	}
 
-	base.Tree(to, dir)
+	base.Tree(out, to, dir)
 
-	fmt.Printf("\n🍺 Repository creation succeeded %s\n", color.GreenString(p.Name))
-	fmt.Print("💻 Use the following command to add a project 👇:\n\n")
+	_, _ = fmt.Fprintf(out, "\n🍺 Service %s added\n", color.GreenString(p.Name))
+	_, _ = fmt.Fprintln(out, color.WhiteString("$ go build ./%s/...", p.Path))
 
-	fmt.Println(color.WhiteString("$ cd %s", p.Name))
-	fmt.Println(color.WhiteString("$ make build"))
-	fmt.Println(color.WhiteString("$ ./bin/app"))
-	fmt.Println(color.WhiteString("$ Help: ./bin/app --help"))
 	return nil
 }

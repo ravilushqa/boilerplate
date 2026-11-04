@@ -3,66 +3,60 @@ package project
 import (
 	"context"
 	"fmt"
-	"os"
+	"io"
 	"path"
 
-	"github.com/ravilushqa/boilerplate/cmd/boilerplate/internal/base"
-
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
+
+	"github.com/ravilushqa/boilerplate/cmd/boilerplate/internal/base"
 )
 
-// Project is a project template.
-type Project struct {
-	Name string
-	Path string
-}
+// templateName is the service name used in the template; it is replaced
+// with the new service name in non-Go files (Helm chart, Makefile, docs...).
+const templateName = "boilerplate"
 
-// New new a project from remote repo.
-func (p *Project) New(ctx context.Context, dir string, layout string, branch string) error {
+// New creates a new project from the template repository.
+func (p *Project) New(ctx context.Context, in io.Reader, out io.Writer, dir string, opts options) error {
 	to := path.Join(dir, p.Name)
-	if _, err := os.Stat(to); !os.IsNotExist(err) {
-		fmt.Printf("🚫 %s already exists\n", p.Name)
-		override := false
-		prompt := &survey.Confirm{
-			Message: "📂 Do you want to override the folder ?",
-			Help:    "Delete the existing folder and create the project.",
-		}
-		e := survey.AskOne(prompt, &override)
-		if e != nil {
-			return e
-		}
-		if !override {
-			return err
-		}
-		os.RemoveAll(to)
-	}
-	fmt.Printf("🚀 Creating service %s, layout repo is %s, please wait a moment.\n\n", p.Name, layout)
-	repo := base.NewRepo(layout, branch)
-	if err := repo.CopyTo(ctx, to, p.Path, []string{".git", ".github"}); err != nil {
+
+	if err := prepareDir(in, out, to, opts.force); err != nil {
 		return err
 	}
 
-	// replace substring in files in the chart folder, Makefile and README.md
-	base.ReplaceInFiles(
-		[]string{path.Join(to, "chart"), path.Join(to, "Makefile")},
-		[]string{"boilerplate", p.Name},
-	)
+	_, _ = fmt.Fprintf(out, "🚀 Creating service %s from %s, please wait a moment.\n\n", p.Name, opts.repoURL)
 
-	// remove cmd folder
-	err := os.RemoveAll(path.Join(to, "cmd"))
+	repo, err := base.NewRepo(opts.repoURL, opts.branch)
 	if err != nil {
 		return err
 	}
 
-	base.Tree(to, dir)
+	if err := repo.CopyTo(ctx, to, p.Path, []string{".git"}); err != nil {
+		return err
+	}
 
-	fmt.Printf("\n🍺 Project creation succeeded %s\n", color.GreenString(p.Name))
-	fmt.Print("💻 Use the following command to start the project 👇:\n\n")
+	// Template-only files go first: .templateignore mentions the template name.
+	if err := base.RemoveTemplateOnly(to); err != nil {
+		return err
+	}
 
-	fmt.Println(color.WhiteString("$ cd %s", p.Name))
-	fmt.Println(color.WhiteString("$ make build"))
-	fmt.Println(color.WhiteString("$ ./bin/app"))
-	fmt.Println(color.WhiteString("$ Help: ./bin/app --help"))
+	if err := base.StripTemplateBlocks(to); err != nil {
+		return err
+	}
+
+	if err := base.ReplaceName(to, templateName, p.Name); err != nil {
+		return err
+	}
+
+	base.Tree(out, to, dir)
+
+	_, _ = fmt.Fprintf(out, "\n🍺 Project %s created\n", color.GreenString(p.Name))
+	_, _ = fmt.Fprint(out, "💻 Next steps:\n\n")
+	_, _ = fmt.Fprintln(out, color.WhiteString("$ cd %s", p.Name))
+	_, _ = fmt.Fprintln(out, color.WhiteString("$ git init"))
+	_, _ = fmt.Fprintln(out, color.WhiteString("$ make generate   # regenerate protobuf code for the new module path"))
+	_, _ = fmt.Fprintln(out, color.WhiteString("$ make check      # format, lint and test"))
+	_, _ = fmt.Fprintln(out, color.WhiteString("$ make run"))
+	_, _ = fmt.Fprintln(out, "\n📖 Read AGENTS.md (also for humans) to learn the layout and conventions.")
+
 	return nil
 }

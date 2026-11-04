@@ -1,0 +1,16 @@
+# Code generation: `make generate`. Plugins run via `go tool`, nothing to install globally.
+# https://buf.build/docs/configuration/v2/buf-gen-yaml
+version: v2
+plugins:
+  - local: ["go", "tool", "-modfile=tools/go.mod", "protoc-gen-go"]
+    out: api
+    opt:
+      - paths=source_relative
+      # Opaque API: generated structs are accessed via getters/setters/builders.
+      # https://go.dev/blog/protobuf-opaque
+      - default_api_level=API_OPAQUE
+  - local: ["go", "tool", "-modfile=tools/go.mod", "protoc-gen-go-grpc"]
+    out: api
+    opt: paths=source_relative
+inputs:
+  - directory: api

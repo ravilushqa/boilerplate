@@ -1,32 +1,21 @@
 package base
 
 import (
-	"context"
-	"os"
+	"path/filepath"
 	"testing"
 )
 
 func TestRepo(t *testing.T) {
 	urls := []string{
-		// ssh://[user@]host.xz[:port]/path/to/repo.git/
 		"ssh://git@github.com:7875/ravilushqa/boilerplate.git",
-		// git://host.xz[:port]/path/to/repo.git/
 		"git://github.com:7875/ravilushqa/boilerplate.git",
-		// http[s]://host.xz[:port]/path/to/repo.git/
 		"https://github.com:7875/ravilushqa/boilerplate.git",
-		// ftp[s]://host.xz[:port]/path/to/repo.git/
 		"ftps://github.com:7875/ravilushqa/boilerplate.git",
-		//[user@]host.xz:path/to/repo.git/
 		"git@github.com:ravilushqa/boilerplate.git",
-		// ssh://[user@]host.xz[:port]/~[user]/path/to/repo.git/
 		"ssh://git@github.com:7875/ravilushqa/boilerplate.git",
-		// git://host.xz[:port]/~[user]/path/to/repo.git/
 		"git://github.com:7875/ravilushqa/boilerplate.git",
-		//[user@]host.xz:/~[user]/path/to/repo.git/
 		"git@github.com:ravilushqa/boilerplate.git",
-		///path/to/repo.git/
 		"//github.com/ravilushqa/boilerplate.git",
-		// file:///path/to/repo.git/
 		"file://./github.com/ravilushqa/boilerplate.git",
 	}
 	for _, url := range urls {
@@ -38,14 +27,20 @@ func TestRepo(t *testing.T) {
 }
 
 func TestRepoClone(t *testing.T) {
-	r := NewRepo("https://github.com/ravilushqa/boilerplate.git", "")
-	if err := r.Clone(context.Background()); err != nil {
+	if testing.Short() {
+		t.Skip("requires network access")
+	}
+
+	r, err := NewRepo("https://github.com/ravilushqa/boilerplate.git", "")
+	if err != nil {
 		t.Fatal(err)
 	}
-	if err := r.CopyTo(context.Background(), "/tmp/test_repo", "github.com/ravilushqa/boilerplate-layout", nil); err != nil {
+
+	if err := r.Clone(t.Context()); err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() {
-		os.RemoveAll("/tmp/test_repo")
-	})
+
+	if err := r.CopyTo(t.Context(), filepath.Join(t.TempDir(), "repo"), "github.com/ravilushqa/boilerplate-layout", nil); err != nil {
+		t.Fatal(err)
+	}
 }

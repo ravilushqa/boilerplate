@@ -1,0 +1,52 @@
+# Template repository only (listed in .templateignore).
+# Tests the `boilerplate` CLI and that a freshly generated project passes its own checks.
+name: CLI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cli:
+    name: Test CLI and generated project
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: |
+            cmd/boilerplate/go.sum
+            tools/go.sum
+
+      - name: Lint and test the CLI
+        working-directory: cmd/boilerplate
+        run: |
+          go tool -modfile=../../tools/go.mod golangci-lint run ./...
+          go test -race -count=1 ./...
+
+      - name: Generate a project from this commit
+        run: |
+          go install ./cmd/boilerplate
+          git config --global user.email ci@example.com
+          git config --global user.name CI
+          git switch -c e2e
+          cd "$RUNNER_TEMP"
+          boilerplate new github.com/acme/billing --repo-url "$GITHUB_WORKSPACE" --branch e2e --force
+
+      - name: Check the generated project
+        working-directory: ${{ runner.temp }}/billing
+        run: |
+          git init -q && git add -A && git commit -qm init
+          make check
+          git diff --exit-code
+          make build
+          ./bin/server --version
