@@ -45,7 +45,9 @@ jobs:
       - name: Check the generated project
         working-directory: ${{ runner.temp }}/billing
         run: |
-          git init -q && git add -A && git commit -qm init
+          git init -q
+          make generate
+          git add -A && git commit -qm init
           make check
           git diff --exit-code
           make build

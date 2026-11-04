@@ -2,6 +2,8 @@ module github.com/ravilushqa/boilerplate
 
 go 1.27.0
 
+toolchain go1.27.3
+
 require (
 	github.com/alecthomas/kong v1.17.0
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.1.1
