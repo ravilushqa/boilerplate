@@ -9,11 +9,10 @@ flowchart LR
     k8s([Kubernetes, Prometheus]) -->|:8081| debug
 
     subgraph process [server process]
-        main[cmd/server] --> app[internal/app]
-        app --> httpapi[internal/httpapi]
-        app --> grpcapi[internal/grpcapi]
-        app --> debug[internal/debug]
-        httpapi --> greeter[internal/greeter]
+        main[main.go + app.go] --> httpapi[httpapi]
+        main --> grpcapi[grpcapi]
+        main --> debug[debug]
+        httpapi --> greeter[greeter]
         grpcapi --> greeter
     end
 ```
@@ -38,16 +37,16 @@ logic is reachable over HTTP and gRPC and tested without either.
 
 ## Lifecycle
 
-1. `cmd/server` parses configuration (flags and env), builds the logger and
+1. `main.go` parses configuration (flags and env), builds the logger and
    subscribes to `SIGINT`/`SIGTERM`.
-2. `app.New` constructs all dependencies and **binds all listeners**: a bad
+2. `newApp` (`app.go`) constructs all dependencies and **binds all listeners**: a bad
    address or a busy port fails fast, before anything starts.
-3. `App.Run` starts the servers in an `errgroup` and marks the service ready.
+3. `app.run` starts the servers in an `errgroup` and marks the service ready.
 4. On a signal (or if any server fails), shutdown starts:
    readiness turns to 503 and gRPC health to `NOT_SERVING`, then the HTTP and
    gRPC servers drain in-flight requests within `SHUTDOWN_TIMEOUT`. The debug
    server stops last, so probes and metrics work while draining.
-5. `Run` returns `nil` after a clean shutdown; `main` exits with code 1 on error.
+5. `run` returns `nil` after a clean shutdown; `main` exits with code 1 on error.
 
 Set the pod's `terminationGracePeriodSeconds` higher than `SHUTDOWN_TIMEOUT`.
 
@@ -61,12 +60,12 @@ Set the pod's `terminationGracePeriodSeconds` higher than `SHUTDOWN_TIMEOUT`.
   `grpc_server_*` family. The `route` label is the ServeMux pattern, so
   cardinality stays bounded.
 - **Profiling**: `go tool pprof http://localhost:8081/debug/pprof/profile`.
-- **Build info**: `GET /debug/version`, `server --version`.
+- **Build info**: `GET /debug/version`, `bin/boilerplate --version`.
 
 ## Configuration
 
-Declared once in `internal/config` as struct tags; each option is a flag and an
-environment variable. `server --help` prints the reference; `.env.example`
+Declared once in `config` as struct tags; each option is a flag and an
+environment variable. `--help` prints the reference; `.env.example`
 lists the defaults.
 
 ## Code generation

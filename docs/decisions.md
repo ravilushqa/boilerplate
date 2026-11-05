@@ -19,7 +19,7 @@ makes business rules testable without servers.
 
 ### Manual dependency injection in one place
 
-All construction happens in `internal/app`. No DI framework, no `init()`, no
+All construction happens in `app.go`, next to `main.go`. No DI framework, no `init()`, no
 globals: the dependency graph is plain Go code that is easy to read and change.
 
 ### Configuration with kong
@@ -63,3 +63,13 @@ common changes, so generated code stays consistent across services.
 `gcr.io/distroless/static-debian13:nonroot`: no shell or package manager,
 minimal attack surface, CA certificates and tzdata included. The Helm chart
 runs it with a read-only root filesystem and all capabilities dropped.
+
+### Flat layout and plain `testing`, following the `go` skill
+
+The service follows the [`go` skill by spf13](../.claude/skills/go/SKILL.md),
+vendored in the repository so every agent and person uses the same guidance:
+domain packages one level deep at the module root, `main.go` at the root for a
+single binary, no `internal/` or `cmd/`; tests with the standard `testing`
+package and `go-cmp` instead of testify. Replaced the earlier `cmd/server` +
+`internal/` layout: for an application nobody imports, those directories only
+added path depth.

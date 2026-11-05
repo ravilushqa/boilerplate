@@ -10,8 +10,6 @@ import (
 	"os/signal"
 
 	"github.com/spf13/cobra"
-
-	"github.com/ravilushqa/boilerplate/cmd/boilerplate/internal/project"
 )
 
 func main() {
@@ -22,7 +20,7 @@ func main() {
 		Use:   "boilerplate",
 		Short: "Create Go services from the boilerplate template.",
 	}
-	root.AddCommand(project.NewCmd())
+	root.AddCommand(newCmd())
 
 	if err := root.ExecuteContext(ctx); err != nil {
 		os.Exit(1) //nolint:gocritic // stop() is not needed on exit

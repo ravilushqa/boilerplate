@@ -3,7 +3,7 @@
 
 MODULE  := $(shell go list -m)
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
-LDFLAGS := -s -w -X $(MODULE)/internal/version.version=$(VERSION)
+LDFLAGS := -s -w -X $(MODULE)/version.version=$(VERSION)
 TOOL    := go tool -modfile=tools/go.mod
 IMAGE   ?= boilerplate:local
 
@@ -13,7 +13,7 @@ IMAGE   ?= boilerplate:local
 
 .PHONY: run
 run: ## Run the service locally with human-readable logs
-	go run ./cmd/server --log-format=text --log-level=debug
+	go run . --log-format=text --log-level=debug
 
 .PHONY: generate
 generate: ## Generate code (protobuf, go:generate)
@@ -24,6 +24,10 @@ generate: ## Generate code (protobuf, go:generate)
 fmt: ## Format code
 	$(TOOL) golangci-lint fmt ./...
 	$(TOOL) buf format -w
+
+.PHONY: skills-update
+skills-update: ## Update vendored agent skills from upstream (spf13/go-skills)
+	curl -fsSL https://raw.githubusercontent.com/spf13/go-skills/main/go/SKILL.md -o .claude/skills/go/SKILL.md
 
 .PHONY: tidy
 tidy: ## Tidy go.mod files
@@ -60,8 +64,8 @@ check: generate fmt tidy lint test ## Run everything CI runs; must pass before e
 ##@ Build
 
 .PHONY: build
-build: ## Build the binary into bin/server
-	CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o bin/server ./cmd/server
+build: ## Build the binary into bin/boilerplate
+	CGO_ENABLED=0 go build -trimpath -ldflags "$(LDFLAGS)" -o bin/boilerplate .
 
 .PHONY: docker
 docker: ## Build the container image

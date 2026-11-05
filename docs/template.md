@@ -32,7 +32,8 @@ stdin is a terminal, so agents and scripts can run it safely.
 3. Removes paths listed in `.templateignore` (this CLI, template-only
    workflows and docs).
 4. Replaces the word `boilerplate` with the service name in non-Go files
-   (Helm chart, Makefile, compose, docs).
+   (Helm chart, Makefile, Dockerfile, compose, docs), except vendored files
+   in `.claude/skills/`.
 5. Removes blocks between `<!-- template:start -->` and `<!-- template:end -->`
    in Markdown files.
 

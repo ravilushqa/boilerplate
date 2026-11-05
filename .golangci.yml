@@ -26,7 +26,6 @@ linters:
     - protogetter
     - revive
     - sloglint
-    - testifylint
     - thelper
     - unconvert
     - unparam
@@ -42,8 +41,8 @@ linters:
               desc: Use the corresponding os or io functions instead.
             - pkg: log$
               desc: Use log/slog with an injected *slog.Logger.
-            - pkg: github.com/stretchr/testify/assert
-              desc: Use github.com/stretchr/testify/require.
+            - pkg: github.com/stretchr/testify
+              desc: Use the testing package; compare complex values with github.com/google/go-cmp/cmp.
             - pkg: github.com/golang/protobuf
               desc: Use google.golang.org/protobuf.
             - pkg: github.com/pkg/errors

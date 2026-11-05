@@ -51,4 +51,4 @@ jobs:
           make check
           git diff --exit-code
           make build
-          ./bin/server --version
+          ./bin/billing --version

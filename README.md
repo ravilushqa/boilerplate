@@ -42,7 +42,7 @@ curl -s localhost:8081/debug/version # build info
 
 ## Configuration
 
-Every option is a flag and an environment variable. `go run ./cmd/server --help`
+Every option is a flag and an environment variable. `go run . --help`
 prints the full reference; [.env.example](.env.example) lists the defaults.
 
 | Variable | Default | Description |
@@ -70,6 +70,7 @@ The container is distroless and runs as non-root. Kubernetes probes use
 ## Documentation
 
 - [AGENTS.md](AGENTS.md): commands, layout, rules and conventions. Start here, whether you are a person or an AI agent.
+- [.claude/skills/go/SKILL.md](.claude/skills/go/SKILL.md): idiomatic Go guidance the code follows (by spf13).
 - [docs/architecture.md](docs/architecture.md): how the service works.
 - [docs/recipes.md](docs/recipes.md): adding endpoints, gRPC methods, options, dependencies.
 - [docs/decisions.md](docs/decisions.md): why it is built this way.

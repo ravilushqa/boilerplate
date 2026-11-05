@@ -19,18 +19,18 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=bind,target=. \
     CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
     go build -trimpath \
-      -ldflags "-s -w -X github.com/ravilushqa/boilerplate/internal/version.version=${VERSION}" \
-      -o /out/server ./cmd/server
+      -ldflags "-s -w -X github.com/ravilushqa/boilerplate/version.version=${VERSION}" \
+      -o /out/boilerplate .
 
 # Runtime stage: no shell, no package manager, non-root user.
 # Includes CA certificates and timezone data.
 FROM gcr.io/distroless/static-debian13:nonroot
 
-COPY --from=build /out/server /server
+COPY --from=build /out/boilerplate /boilerplate
 
 USER nonroot:nonroot
 
 # 8080: HTTP API, 50051: gRPC API, 8081: debug (health, metrics, pprof)
 EXPOSE 8080 50051 8081
 
-ENTRYPOINT ["/server"]
+ENTRYPOINT ["/boilerplate"]
