@@ -1,9 +1,10 @@
 package greeter_test
 
 import (
-	"errors"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/ravilushqa/boilerplate/greeter"
 )
@@ -36,13 +37,13 @@ func TestServiceGreet(t *testing.T) {
 			var s greeter.Service
 
 			got, err := s.Greet(t.Context(), tt.input)
-			if !errors.Is(err, tt.wantErr) {
-				t.Fatalf("Greet(%q) error = %v, want %v", tt.input, err, tt.wantErr)
+			if tt.wantErr != nil {
+				require.ErrorIs(t, err, tt.wantErr)
+				return
 			}
 
-			if got != tt.want {
-				t.Errorf("Greet(%q) = %q, want %q", tt.input, got, tt.want)
-			}
+			require.NoError(t, err)
+			require.Equal(t, tt.want, got)
 		})
 	}
 }

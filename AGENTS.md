@@ -15,8 +15,9 @@ It ships as a distroless container and a Helm chart.
 General Go style comes from the **`go` skill** vendored in
 [.claude/skills/go/SKILL.md](.claude/skills/go/SKILL.md) (by spf13, MIT).
 Claude Code loads it automatically; other agents and humans: read it before
-writing Go. This file adds only what is specific to this project. The two
-agree; if you ever find a conflict, follow this file and fix the conflict.
+writing Go. The skill is the authority on Go style; this file only adds
+decisions specific to this project and must not contradict it. If you find a
+contradiction, change this file to match the skill (never edit the skill).
 
 ## Commands
 
@@ -87,9 +88,11 @@ No `internal/`, `pkg/`, `cmd/` (single binary), and no layer packages
 - Protobuf: Opaque API (`GetX()`, `X_builder{...}.Build()`); never edit `*.pb.go`.
 - HTTP routes are declared in one place: `httpapi.NewHandler`. Version public
   paths (`/v1/...`).
-- Tests: standard `testing` only, table-driven over a slice of structs with
-  `t.Run(tt.name, ...)`, `github.com/google/go-cmp/cmp` for complex values,
-  hand-written fakes, `t.Context()`, in-memory transports (`httptest`, `bufconn`).
+- Tests: table-driven over a slice of structs with `t.Run(tt.name, ...)`;
+  assertions with `github.com/stretchr/testify/require` (not `assert`, not
+  `mock`); `cmp.Diff` from `github.com/google/go-cmp/cmp` for complex structs
+  and maps; hand-written fakes; `t.Context()`; in-memory transports
+  (`httptest`, `bufconn`); `synctest` instead of sleeps for timing.
   Packages are tested black-box (`package foo_test`); `package main` from `app_test.go`.
 - Every exported identifier has a doc comment; every package has a package comment
   explaining its role.

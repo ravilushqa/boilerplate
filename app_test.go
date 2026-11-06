@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -29,14 +30,10 @@ func newTestApp(t *testing.T) *app {
 		"--debug-addr=127.0.0.1:0",
 		"--shutdown-timeout=5s",
 	})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	a, err := newApp(cfg, slog.New(slog.NewTextHandler(t.Output(), nil)))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	// Release ports of an app that never ran (after run, they are already closed).
 	t.Cleanup(func() {
@@ -53,21 +50,15 @@ func do(t *testing.T, method, url, body string) (int, string) {
 	t.Helper()
 
 	req, err := http.NewRequestWithContext(t.Context(), method, url, strings.NewReader(body))
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	defer resp.Body.Close()
 
 	b, err := io.ReadAll(resp.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	return resp.StatusCode, string(b)
 }
@@ -87,49 +78,33 @@ func TestApp(t *testing.T) {
 
 	t.Run("HTTP", func(t *testing.T) {
 		code, body := do(t, http.MethodPost, "http://"+a.httpAddr()+"/v1/greet", `{"name":"World"}`)
-		if code != http.StatusOK || strings.TrimSpace(body) != `{"message":"Hello, World!"}` {
-			t.Errorf("POST /v1/greet = %d %s", code, body)
-		}
+		require.Equal(t, http.StatusOK, code)
+		require.JSONEq(t, `{"message":"Hello, World!"}`, body)
 	})
 
 	t.Run("GRPC", func(t *testing.T) {
 		conn, err := grpc.NewClient(a.grpcAddr(), grpc.WithTransportCredentials(insecure.NewCredentials()))
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.NoError(t, err)
 
 		defer conn.Close()
 
 		resp, err := greeterv1.NewGreeterServiceClient(conn).Greet(t.Context(), greeterv1.GreetRequest_builder{Name: "World"}.Build())
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		if got := resp.GetMessage(); got != "Hello, World!" {
-			t.Errorf("Greet = %q", got)
-		}
+		require.NoError(t, err)
+		require.Equal(t, "Hello, World!", resp.GetMessage())
 	})
 
 	t.Run("Metrics", func(t *testing.T) {
 		_, body := do(t, http.MethodGet, "http://"+a.debugAddr()+"/metrics", "")
 
-		for _, want := range []string{
-			`http_server_request_duration_seconds_count{code="200",method="POST",route="POST /v1/greet"} 1`,
-			`grpc_server_handled_total{grpc_code="OK",grpc_method="Greet",grpc_service="greeter.v1.GreeterService",grpc_type="unary"} 1`,
-		} {
-			if !strings.Contains(body, want) {
-				t.Errorf("/metrics does not contain %s", want)
-			}
-		}
+		require.Contains(t, body, `http_server_request_duration_seconds_count{code="200",method="POST",route="POST /v1/greet"} 1`)
+		require.Contains(t, body, `grpc_server_handled_total{grpc_code="OK",grpc_method="Greet",grpc_service="greeter.v1.GreeterService",grpc_type="unary"} 1`)
 	})
 
 	cancel()
 
 	select {
 	case err := <-done:
-		if err != nil {
-			t.Errorf("run() = %v, want nil after a clean shutdown", err)
-		}
+		require.NoError(t, err, "run() must return nil after a clean shutdown")
 	case <-time.After(10 * time.Second):
 		t.Fatal("service did not stop in time")
 	}
@@ -141,14 +116,10 @@ func TestNewAppPortInUse(t *testing.T) {
 	first := newTestApp(t)
 
 	cfg, err := config.Parse([]string{"--http-addr=127.0.0.1:0", "--grpc-addr=" + first.grpcAddr(), "--debug-addr=127.0.0.1:0"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	_, err = newApp(cfg, slog.New(slog.DiscardHandler))
-	if err == nil || !strings.Contains(err.Error(), "grpc: listening on") {
-		t.Errorf("newApp() error = %v, want a gRPC listen error", err)
-	}
+	require.ErrorContains(t, err, "grpc: listening on")
 }
 
 func TestNewLogger(t *testing.T) {
@@ -157,21 +128,15 @@ func TestNewLogger(t *testing.T) {
 	var buf bytes.Buffer
 
 	l, err := newLogger(&buf, config.Log{Level: "warn", Format: "json"})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
 	l.Info("hidden")
 	l.Warn("shown", "key", "value")
 
 	var entry map[string]any
-	if err := json.Unmarshal(buf.Bytes(), &entry); err != nil {
-		t.Fatalf("want exactly one JSON line, got %q: %v", buf.String(), err)
-	}
-
-	if entry["msg"] != "shown" || entry["key"] != "value" {
-		t.Errorf("unexpected entry: %v", entry)
-	}
+	require.NoError(t, json.Unmarshal(buf.Bytes(), &entry), "want exactly one JSON line, got %q", buf.String())
+	require.Equal(t, "shown", entry["msg"])
+	require.Equal(t, "value", entry["key"])
 }
 
 func TestNewLoggerInvalid(t *testing.T) {
@@ -189,9 +154,8 @@ func TestNewLoggerInvalid(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			if _, err := newLogger(io.Discard, tt.cfg); err == nil {
-				t.Errorf("newLogger(%+v) succeeded, want an error", tt.cfg)
-			}
+			_, err := newLogger(io.Discard, tt.cfg)
+			require.Error(t, err)
 		})
 	}
 }

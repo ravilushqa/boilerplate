@@ -10,6 +10,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.1.1
 	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.3.4
 	github.com/prometheus/client_golang v1.25.0
+	github.com/stretchr/testify v1.12.1
 	golang.org/x/sync v0.24.0
 	google.golang.org/grpc v1.85.0
 	google.golang.org/protobuf v1.36.12
@@ -22,6 +23,7 @@ require (
 	github.com/prometheus/client_model v0.6.3 // indirect
 	github.com/prometheus/common v0.72.0 // indirect
 	github.com/prometheus/procfs v0.22.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/net v0.60.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
 	golang.org/x/text v0.42.0 // indirect

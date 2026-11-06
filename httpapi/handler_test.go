@@ -2,7 +2,6 @@ package httpapi_test
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -12,6 +11,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ravilushqa/boilerplate/greeter"
 	"github.com/ravilushqa/boilerplate/httpapi"
@@ -44,24 +44,6 @@ func serve(t *testing.T, h http.Handler, method, path, body string) *httptest.Re
 	return rec
 }
 
-// checkJSON fails the test if got and want are not equivalent JSON documents.
-func checkJSON(t *testing.T, got, want string) {
-	t.Helper()
-
-	var g, w any
-	if err := json.Unmarshal([]byte(got), &g); err != nil {
-		t.Fatalf("response is not JSON: %v\n%s", err, got)
-	}
-
-	if err := json.Unmarshal([]byte(want), &w); err != nil {
-		t.Fatalf("expectation is not JSON: %v", err)
-	}
-
-	if diff := cmp.Diff(w, g); diff != "" {
-		t.Errorf("JSON mismatch (-want +got):\n%s", diff)
-	}
-}
-
 func TestHandler(t *testing.T) {
 	t.Parallel()
 
@@ -90,19 +72,11 @@ func TestHandler(t *testing.T) {
 			t.Parallel()
 
 			rec := serve(t, h, tt.method, tt.path, tt.body)
+			require.Equal(t, tt.wantStatus, rec.Code, rec.Body.String())
 
-			if rec.Code != tt.wantStatus {
-				t.Errorf("status = %d, want %d; body: %s", rec.Code, tt.wantStatus, rec.Body)
-			}
-
-			if tt.wantBody == "" {
-				return
-			}
-
-			checkJSON(t, rec.Body.String(), tt.wantBody)
-
-			if ct := rec.Header().Get("Content-Type"); ct != "application/json" {
-				t.Errorf("Content-Type = %q, want application/json", ct)
+			if tt.wantBody != "" {
+				require.JSONEq(t, tt.wantBody, rec.Body.String())
+				require.Equal(t, "application/json", rec.Header().Get("Content-Type"))
 			}
 		})
 	}
@@ -117,12 +91,8 @@ func TestHandlerInternalError(t *testing.T) {
 
 	rec := serve(t, h, http.MethodPost, "/v1/greet", `{"name":"x"}`)
 
-	if rec.Code != http.StatusInternalServerError {
-		t.Errorf("status = %d, want %d", rec.Code, http.StatusInternalServerError)
-	}
-
-	// Internal details must not leak to clients.
-	checkJSON(t, rec.Body.String(), `{"error":"Internal Server Error"}`)
+	require.Equal(t, http.StatusInternalServerError, rec.Code)
+	require.JSONEq(t, `{"error":"Internal Server Error"}`, rec.Body.String(), "internal details must not leak")
 }
 
 func TestHandlerPanic(t *testing.T) {
@@ -132,9 +102,8 @@ func TestHandlerPanic(t *testing.T) {
 		panic("boom")
 	}))
 
-	if rec := serve(t, h, http.MethodPost, "/v1/greet", `{"name":"x"}`); rec.Code != http.StatusInternalServerError {
-		t.Errorf("status = %d, want %d", rec.Code, http.StatusInternalServerError)
-	}
+	rec := serve(t, h, http.MethodPost, "/v1/greet", `{"name":"x"}`)
+	require.Equal(t, http.StatusInternalServerError, rec.Code)
 }
 
 func TestHandlerMetrics(t *testing.T) {
@@ -144,13 +113,10 @@ func TestHandlerMetrics(t *testing.T) {
 	serve(t, h, http.MethodPost, "/v1/greet", `{"name":"x"}`)
 
 	mfs, err := reg.Gather()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(mfs) != 1 || mfs[0].GetName() != "http_server_request_duration_seconds" || len(mfs[0].GetMetric()) != 1 {
-		t.Fatalf("want one http_server_request_duration_seconds series, got %v", mfs)
-	}
+	require.NoError(t, err)
+	require.Len(t, mfs, 1)
+	require.Equal(t, "http_server_request_duration_seconds", mfs[0].GetName())
+	require.Len(t, mfs[0].GetMetric(), 1)
 
 	labels := map[string]string{}
 	for _, lp := range mfs[0].GetMetric()[0].GetLabel() {

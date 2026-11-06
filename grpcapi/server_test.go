@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -46,11 +47,9 @@ func dial(t *testing.T, g grpcapi.Greeter) *grpc.ClientConn {
 		grpc.WithContextDialer(func(ctx context.Context, _ string) (net.Conn, error) { return lis.DialContext(ctx) }),
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	t.Cleanup(func() { _ = conn.Close() })
+	t.Cleanup(func() { require.NoError(t, conn.Close()) })
 
 	return conn
 }
@@ -75,13 +74,8 @@ func TestGreet(t *testing.T) {
 			t.Parallel()
 
 			resp, err := client.Greet(t.Context(), greeterv1.GreetRequest_builder{Name: tt.input}.Build())
-			if code := status.Code(err); code != tt.wantCode {
-				t.Fatalf("Greet(%q) code = %v, want %v (err: %v)", tt.input, code, tt.wantCode, err)
-			}
-
-			if got := resp.GetMessage(); got != tt.want {
-				t.Errorf("Greet(%q) = %q, want %q", tt.input, got, tt.want)
-			}
+			require.Equal(t, tt.wantCode, status.Code(err), "%v", err)
+			require.Equal(t, tt.want, resp.GetMessage())
 		})
 	}
 }
@@ -94,20 +88,13 @@ func TestGreetPanic(t *testing.T) {
 	})))
 
 	_, err := client.Greet(t.Context(), greeterv1.GreetRequest_builder{Name: "x"}.Build())
-	if code := status.Code(err); code != codes.Internal {
-		t.Errorf("code = %v, want %v", code, codes.Internal)
-	}
+	require.Equal(t, codes.Internal, status.Code(err))
 }
 
 func TestHealth(t *testing.T) {
 	t.Parallel()
 
 	resp, err := healthpb.NewHealthClient(dial(t, &greeter.Service{})).Check(t.Context(), &healthpb.HealthCheckRequest{})
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if got := resp.GetStatus(); got != healthpb.HealthCheckResponse_SERVING {
-		t.Errorf("status = %v, want SERVING", got)
-	}
+	require.NoError(t, err)
+	require.Equal(t, healthpb.HealthCheckResponse_SERVING, resp.GetStatus())
 }

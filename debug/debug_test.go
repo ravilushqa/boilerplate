@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"sync/atomic"
 	"testing"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ravilushqa/boilerplate/debug"
 	"github.com/ravilushqa/boilerplate/version"
@@ -33,31 +33,23 @@ func TestHandler(t *testing.T) {
 	var ready atomic.Bool
 	h := debug.NewHandler(reg, ready.Load)
 
-	checkStatus := func(path string, want int) {
-		t.Helper()
+	require.Equal(t, http.StatusOK, get(t, h, "/livez").Code)
 
-		if got := get(t, h, path).Code; got != want {
-			t.Errorf("GET %s: status %d, want %d", path, got, want)
-		}
-	}
-
-	checkStatus("/livez", http.StatusOK)
-	checkStatus("/readyz", http.StatusServiceUnavailable)
+	require.Equal(t, http.StatusServiceUnavailable, get(t, h, "/readyz").Code)
 	ready.Store(true)
-	checkStatus("/readyz", http.StatusOK)
-	checkStatus("/debug/pprof/", http.StatusOK)
-	checkStatus("/nope", http.StatusNotFound)
+	require.Equal(t, http.StatusOK, get(t, h, "/readyz").Code)
 
-	if body := get(t, h, "/metrics").Body.String(); !strings.Contains(body, "go_goroutines") {
-		t.Errorf("GET /metrics: no go_goroutines metric in:\n%s", body)
-	}
+	metrics := get(t, h, "/metrics")
+	require.Equal(t, http.StatusOK, metrics.Code)
+	require.Contains(t, metrics.Body.String(), "go_goroutines")
+
+	rec := get(t, h, "/debug/version")
+	require.Equal(t, http.StatusOK, rec.Code)
 
 	var info version.Info
-	if err := json.Unmarshal(get(t, h, "/debug/version").Body.Bytes(), &info); err != nil {
-		t.Fatalf("GET /debug/version: %v", err)
-	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &info))
+	require.Equal(t, version.Current(), info)
 
-	if info != version.Current() {
-		t.Errorf("GET /debug/version = %+v, want %+v", info, version.Current())
-	}
+	require.Equal(t, http.StatusOK, get(t, h, "/debug/pprof/").Code)
+	require.Equal(t, http.StatusNotFound, get(t, h, "/nope").Code)
 }

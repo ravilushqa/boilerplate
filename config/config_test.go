@@ -5,27 +5,15 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/stretchr/testify/require"
 
 	"github.com/ravilushqa/boilerplate/config"
 )
 
-// parse calls config.Parse and fails the test on error.
-func parse(t *testing.T, args ...string) *config.Config {
-	t.Helper()
-
-	cfg, err := config.Parse(args)
-	if err != nil {
-		t.Fatalf("Parse(%q): %v", args, err)
-	}
-
-	return cfg
-}
-
-// ignoreVersion skips the --version flag field, which has no value to compare.
-var ignoreVersion = cmpopts.IgnoreFields(config.Config{}, "Version")
-
 func TestParseDefaults(t *testing.T) {
+	cfg, err := config.Parse(nil)
+	require.NoError(t, err)
+
 	want := &config.Config{
 		Env:             "development",
 		Log:             config.Log{Level: "info", Format: "json"},
@@ -35,7 +23,7 @@ func TestParseDefaults(t *testing.T) {
 		ShutdownTimeout: 15 * time.Second,
 	}
 
-	if diff := cmp.Diff(want, parse(t), ignoreVersion); diff != "" {
+	if diff := cmp.Diff(want, cfg); diff != "" {
 		t.Errorf("Parse() mismatch (-want +got):\n%s", diff)
 	}
 }
@@ -47,25 +35,23 @@ func TestParseEnv(t *testing.T) {
 	t.Setenv("HTTP_ADDR", ":9090")
 	t.Setenv("SHUTDOWN_TIMEOUT", "3s")
 
-	cfg := parse(t)
+	cfg, err := config.Parse(nil)
+	require.NoError(t, err)
 
-	if cfg.Env != "production" || cfg.Log.Level != "debug" || cfg.HTTP.Addr != ":9090" || cfg.ShutdownTimeout != 3*time.Second {
-		t.Errorf("environment not applied: %+v", cfg)
-	}
+	require.Equal(t, "production", cfg.Env)
+	require.Equal(t, "debug", cfg.Log.Level)
+	require.Equal(t, ":9090", cfg.HTTP.Addr)
+	require.Equal(t, 3*time.Second, cfg.ShutdownTimeout)
 }
 
 func TestParseFlagsOverrideEnv(t *testing.T) {
 	t.Setenv("GRPC_ADDR", ":1111")
 
-	cfg := parse(t, "--grpc-addr=:2222", "--log-format=text")
+	cfg, err := config.Parse([]string{"--grpc-addr=:2222", "--log-format=text"})
+	require.NoError(t, err)
 
-	if cfg.GRPC.Addr != ":2222" {
-		t.Errorf("GRPC.Addr = %q, want %q", cfg.GRPC.Addr, ":2222")
-	}
-
-	if cfg.Log.Format != "text" {
-		t.Errorf("Log.Format = %q, want %q", cfg.Log.Format, "text")
-	}
+	require.Equal(t, ":2222", cfg.GRPC.Addr)
+	require.Equal(t, "text", cfg.Log.Format)
 }
 
 func TestParseInvalid(t *testing.T) {
@@ -84,9 +70,8 @@ func TestParseInvalid(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			if _, err := config.Parse(tt.args); err == nil {
-				t.Errorf("Parse(%q) succeeded, want an error", tt.args)
-			}
+			_, err := config.Parse(tt.args)
+			require.Error(t, err)
 		})
 	}
 }

@@ -73,3 +73,10 @@ single binary, no `internal/` or `cmd/`; tests with the standard `testing`
 package and `go-cmp` instead of testify. Replaced the earlier `cmd/server` +
 `internal/` layout: for an application nobody imports, those directories only
 added path depth.
+
+### testify `require` for assertions
+
+testify is back for assertions: the `go` skill does not forbid it, and
+`require` keeps tests short and failure messages clear. Only `require` is
+allowed (`assert` and `mock` are denied by depguard); complex structs and
+maps are still compared with `cmp.Diff`, as the skill recommends.
