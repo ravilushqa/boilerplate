@@ -1,15 +1,36 @@
-FROM golang:1.25 as builder
+# syntax=docker/dockerfile:1
+
+# Build stage: runs on the build machine's platform and cross-compiles,
+# which is much faster than emulating the target platform.
+FROM --platform=$BUILDPLATFORM golang:1.27 AS build
 
 WORKDIR /src
-COPY go.mod .
-COPY go.sum .
-RUN GOPROXY=${PROXY} go mod download
-COPY . .
-RUN CGO_ENABLED=0 make build
 
-FROM alpine:latest
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=bind,source=go.mod,target=go.mod \
+    --mount=type=bind,source=go.sum,target=go.sum \
+    go mod download
 
-RUN apk update && apk add --no-cache ca-certificates tzdata
-COPY --from=builder /src/bin /app
-WORKDIR /app
-CMD ["./app"]
+ARG TARGETOS TARGETARCH
+ARG VERSION=dev
+
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=bind,target=. \
+    CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
+    go build -trimpath \
+      -ldflags "-s -w -X github.com/ravilushqa/boilerplate/version.version=${VERSION}" \
+      -o /out/boilerplate .
+
+# Runtime stage: no shell, no package manager, non-root user.
+# Includes CA certificates and timezone data.
+FROM gcr.io/distroless/static-debian13:nonroot
+
+COPY --from=build /out/boilerplate /boilerplate
+
+USER nonroot:nonroot
+
+# 8080: HTTP API, 50051: gRPC API, 8081: debug (health, metrics, pprof)
+EXPOSE 8080 50051 8081
+
+ENTRYPOINT ["/boilerplate"]

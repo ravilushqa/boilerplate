@@ -1,111 +1,75 @@
+// Command boilerplate runs the service: the public HTTP and gRPC APIs and
+// the internal debug server (health checks, metrics, pprof).
+//
+// main.go is the wiring point: it parses configuration, builds the logger
+// and the dependencies (see app.go) and runs them until a signal arrives.
+// No business logic lives in package main.
+//
+// Run with --help to list every option; each one can also be set through
+// an environment variable.
 package main
 
 import (
 	"context"
 	"fmt"
+	"io"
 	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
-	"github.com/gophermodz/http/httpinfra"
-	"github.com/gorilla/mux"
-	"github.com/jessevdk/go-flags"
-	"github.com/lmittmann/tint"
-	"go.uber.org/automaxprocs/maxprocs"
-	"golang.org/x/sync/errgroup"
-
-	"github.com/ravilushqa/boilerplate/internal/app/grpc"
-	"github.com/ravilushqa/boilerplate/internal/app/http"
+	"github.com/ravilushqa/boilerplate/config"
+	"github.com/ravilushqa/boilerplate/version"
 )
-
-var (
-	// Version is the version of the compiled software.
-	Version string
-	id, _   = os.Hostname()
-)
-
-var opts struct {
-	Env         string `long:"env" env:"ENV" description:"Environment name" default:"development"`
-	LogLevel    string `long:"log-level" env:"LOG_LEVEL" description:"Log level" default:"info"`
-	HTTPAddress string `long:"http-address" env:"HTTP_ADDRESS" description:"HTTP address" default:":8080"`
-	GRPCAddress string `long:"grpc-address" env:"GRPC_ADDRESS" description:"GRPC address" default:":50051"`
-	InfraPort   int    `long:"infra-port" env:"INFRA_PORT" description:"Infra port" default:"8081"`
-}
 
 func main() {
-	_, err := flags.Parse(&opts)
+	if err := run(os.Args[1:]); err != nil {
+		fmt.Fprintln(os.Stderr, "error:", err)
+		os.Exit(1)
+	}
+}
+
+func run(args []string) error {
+	cfg, err := config.Parse(args)
 	if err != nil {
-		if err.(*flags.Error).Type != flags.ErrHelp {
-			panic(err)
-		}
-		return
+		return err
 	}
 
-	l := initLogger()
-	_, _ = maxprocs.Set(maxprocs.Logger(func(s string, i ...interface{}) {
-		l.Info(fmt.Sprintf(s, i...))
-	}))
-
-	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer cancel()
-
-	if err = run(ctx, l); err != nil {
-		l.Error("run failed", err)
+	logger, err := newLogger(os.Stdout, cfg.Log)
+	if err != nil {
+		return err
 	}
+
+	logger = logger.With("version", version.Current().Version, "env", cfg.Env)
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	a, err := newApp(cfg, logger)
+	if err != nil {
+		return err
+	}
+
+	return a.run(ctx)
 }
 
-func run(ctx context.Context, l *slog.Logger) error {
-	eg, ctx := errgroup.WithContext(ctx)
-
-	// HTTP`
-	r := mux.NewRouter()
-	httpServer := http.New(l, r, opts.HTTPAddress)
-	eg.Go(func() error {
-		return httpServer.Run(ctx)
-	})
-
-	// GRPC
-	grpcServer := grpc.New(l, opts.GRPCAddress)
-	eg.Go(func() error {
-		return grpcServer.Run(ctx)
-	})
-
-	// Infra
-	infraServer := httpinfra.New(ctx, l, httpinfra.WithPort(opts.InfraPort), httpinfra.WithVersion(Version))
-	eg.Go(func() error {
-		return infraServer.Run(ctx)
-	})
-
-	return eg.Wait()
-}
-
-func initLogger() *slog.Logger {
-	w := os.Stderr
-
-	var handler slog.Handler
-
-	// Default handler using JSON format
-	handler = slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelInfo,
-	})
-
-	// Check if environment is development or test
-	if opts.Env == "development" || opts.Env == "test" {
-		// Override handler with tint handler for development/test
-		handler = tint.NewHandler(w, &tint.Options{
-			Level:      slog.LevelDebug,
-			TimeFormat: time.Kitchen,
-		})
+// newLogger returns a logger that writes to w in the configured format and level.
+// It is created once here and passed down explicitly; packages never use
+// the global slog functions.
+func newLogger(w io.Writer, cfg config.Log) (*slog.Logger, error) {
+	var level slog.Level
+	if err := level.UnmarshalText([]byte(cfg.Level)); err != nil {
+		return nil, fmt.Errorf("parsing log level: %w", err)
 	}
 
-	// Set the default logger using the selected handler
-	slog.SetDefault(slog.New(handler))
-	slog.With(slog.String("id", id), slog.String("version", Version), slog.String("env", opts.Env))
+	opts := &slog.HandlerOptions{Level: level}
 
-	l := slog.New(handler)
-	l.With(slog.String("id", id), slog.String("version", Version), slog.String("env", opts.Env))
-
-	return l
+	switch cfg.Format {
+	case "json":
+		return slog.New(slog.NewJSONHandler(w, opts)), nil
+	case "text":
+		return slog.New(slog.NewTextHandler(w, opts)), nil
+	default:
+		return nil, fmt.Errorf("unknown log format %q", cfg.Format)
+	}
 }
