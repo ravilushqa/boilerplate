@@ -1,4 +1,4 @@
-// Package debug implements the internal (non-public) HTTP server:
+// Package debugserver implements the internal (non-public) HTTP server:
 // health probes, Prometheus metrics, pprof and build info.
 //
 // Endpoints:
@@ -8,7 +8,7 @@
 //	GET /metrics        Prometheus metrics
 //	GET /debug/version  build information as JSON
 //	    /debug/pprof/   Go profiler
-package debug
+package debugserver
 
 import (
 	"encoding/json"
@@ -18,7 +18,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/ravilushqa/boilerplate/version"
+	"github.com/ravilushqa/boilerplate/internal/version"
 )
 
 // NewHandler returns the debug server handler.

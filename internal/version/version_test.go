@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/ravilushqa/boilerplate/version"
+	"github.com/ravilushqa/boilerplate/internal/version"
 )
 
 func TestCurrent(t *testing.T) {

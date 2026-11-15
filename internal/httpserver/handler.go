@@ -1,9 +1,9 @@
-// Package httpapi implements the public HTTP JSON API.
+// Package httpserver implements the public HTTP JSON API.
 //
 // Routing uses the standard library [http.ServeMux] with method and
 // wildcard patterns. Handlers are thin: decode the request, call business
 // logic, map errors to status codes, encode the response.
-package httpapi
+package httpserver
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/ravilushqa/boilerplate/greeter"
+	"github.com/ravilushqa/boilerplate/internal/greeter"
 )
 
 // Greeter is the business logic the API depends on.

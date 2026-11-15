@@ -19,7 +19,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=bind,target=. \
     CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
     go build -trimpath \
-      -ldflags "-s -w -X github.com/ravilushqa/boilerplate/version.version=${VERSION}" \
+      -ldflags "-s -w -X github.com/ravilushqa/boilerplate/internal/version.version=${VERSION}" \
       -o /out/boilerplate .
 
 # Runtime stage: no shell, no package manager, non-root user.

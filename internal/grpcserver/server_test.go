@@ -1,4 +1,4 @@
-package grpcapi_test
+package grpcserver_test
 
 import (
 	"context"
@@ -17,20 +17,20 @@ import (
 	"google.golang.org/grpc/test/bufconn"
 
 	greeterv1 "github.com/ravilushqa/boilerplate/api/greeter/v1"
-	"github.com/ravilushqa/boilerplate/greeter"
-	"github.com/ravilushqa/boilerplate/grpcapi"
+	"github.com/ravilushqa/boilerplate/internal/greeter"
+	"github.com/ravilushqa/boilerplate/internal/grpcserver"
 )
 
-// greeterFunc adapts a function to the grpcapi.Greeter interface.
+// greeterFunc adapts a function to the grpcserver.Greeter interface.
 type greeterFunc func(ctx context.Context, name string) (string, error)
 
 func (f greeterFunc) Greet(ctx context.Context, name string) (string, error) { return f(ctx, name) }
 
 // dial starts an in-memory gRPC server and returns a client connection to it.
-func dial(t *testing.T, g grpcapi.Greeter) *grpc.ClientConn {
+func dial(t *testing.T, g grpcserver.Greeter) *grpc.ClientConn {
 	t.Helper()
 
-	srv := grpcapi.NewServer(grpcapi.Deps{
+	srv := grpcserver.NewServer(grpcserver.Deps{
 		Logger:  slog.New(slog.NewTextHandler(t.Output(), nil)),
 		Metrics: prometheus.NewRegistry(),
 		Health:  health.NewServer(),

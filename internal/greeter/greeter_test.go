@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/ravilushqa/boilerplate/greeter"
+	"github.com/ravilushqa/boilerplate/internal/greeter"
 )
 
 func TestServiceGreet(t *testing.T) {

@@ -1,4 +1,4 @@
-package httpapi_test
+package httpserver_test
 
 import (
 	"context"
@@ -13,20 +13,20 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ravilushqa/boilerplate/greeter"
-	"github.com/ravilushqa/boilerplate/httpapi"
+	"github.com/ravilushqa/boilerplate/internal/greeter"
+	"github.com/ravilushqa/boilerplate/internal/httpserver"
 )
 
-// greeterFunc adapts a function to the httpapi.Greeter interface.
+// greeterFunc adapts a function to the httpserver.Greeter interface.
 type greeterFunc func(ctx context.Context, name string) (string, error)
 
 func (f greeterFunc) Greet(ctx context.Context, name string) (string, error) { return f(ctx, name) }
 
-func newHandler(t *testing.T, g httpapi.Greeter) (http.Handler, *prometheus.Registry) {
+func newHandler(t *testing.T, g httpserver.Greeter) (http.Handler, *prometheus.Registry) {
 	t.Helper()
 
 	reg := prometheus.NewRegistry()
-	h := httpapi.NewHandler(httpapi.Deps{
+	h := httpserver.NewHandler(httpserver.Deps{
 		Logger:  slog.New(slog.NewTextHandler(t.Output(), nil)),
 		Metrics: reg,
 		Greeter: g,

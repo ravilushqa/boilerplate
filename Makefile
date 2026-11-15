@@ -3,7 +3,7 @@
 
 MODULE  := $(shell go list -m)
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
-LDFLAGS := -s -w -X $(MODULE)/version.version=$(VERSION)
+LDFLAGS := -s -w -X $(MODULE)/internal/version.version=$(VERSION)
 TOOL    := go tool -modfile=tools/go.mod
 IMAGE   ?= boilerplate:local
 

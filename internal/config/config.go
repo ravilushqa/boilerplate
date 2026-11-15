@@ -13,7 +13,7 @@ import (
 
 	"github.com/alecthomas/kong"
 
-	"github.com/ravilushqa/boilerplate/version"
+	"github.com/ravilushqa/boilerplate/internal/version"
 )
 
 // Config is the root configuration.

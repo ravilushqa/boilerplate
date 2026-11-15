@@ -16,7 +16,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 
 	greeterv1 "github.com/ravilushqa/boilerplate/api/greeter/v1"
-	"github.com/ravilushqa/boilerplate/config"
+	"github.com/ravilushqa/boilerplate/internal/config"
 )
 
 // newTestApp builds the service on random local ports.

@@ -1,4 +1,4 @@
-package debug_test
+package debugserver_test
 
 import (
 	"encoding/json"
@@ -11,8 +11,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ravilushqa/boilerplate/debug"
-	"github.com/ravilushqa/boilerplate/version"
+	"github.com/ravilushqa/boilerplate/internal/debugserver"
+	"github.com/ravilushqa/boilerplate/internal/version"
 )
 
 func get(t *testing.T, h http.Handler, path string) *httptest.ResponseRecorder {
@@ -31,7 +31,7 @@ func TestHandler(t *testing.T) {
 	reg.MustRegister(collectors.NewGoCollector())
 
 	var ready atomic.Bool
-	h := debug.NewHandler(reg, ready.Load)
+	h := debugserver.NewHandler(reg, ready.Load)
 
 	require.Equal(t, http.StatusOK, get(t, h, "/livez").Code)
 

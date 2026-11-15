@@ -4,16 +4,16 @@
 
 ```mermaid
 flowchart LR
-    client([Clients]) -->|HTTP :8080| httpapi
-    client -->|gRPC :50051| grpcapi
-    k8s([Kubernetes, Prometheus]) -->|:8081| debug
+    client([Clients]) -->|HTTP :8080| httpserver
+    client -->|gRPC :50051| grpcserver
+    k8s([Kubernetes, Prometheus]) -->|:8081| debugserver
 
     subgraph process [server process]
-        main[main.go + app.go] --> httpapi[httpapi]
-        main --> grpcapi[grpcapi]
-        main --> debug[debug]
-        httpapi --> greeter[greeter]
-        grpcapi --> greeter
+        main[main.go + app.go] --> httpserver[httpserver]
+        main --> grpcserver[grpcserver]
+        main --> debugserver[debugserver]
+        httpserver --> greeter[greeter]
+        grpcserver --> greeter
     end
 ```
 

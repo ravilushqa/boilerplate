@@ -23,11 +23,11 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 
-	"github.com/ravilushqa/boilerplate/config"
-	"github.com/ravilushqa/boilerplate/debug"
-	"github.com/ravilushqa/boilerplate/greeter"
-	"github.com/ravilushqa/boilerplate/grpcapi"
-	"github.com/ravilushqa/boilerplate/httpapi"
+	"github.com/ravilushqa/boilerplate/internal/config"
+	"github.com/ravilushqa/boilerplate/internal/debugserver"
+	"github.com/ravilushqa/boilerplate/internal/greeter"
+	"github.com/ravilushqa/boilerplate/internal/grpcserver"
+	"github.com/ravilushqa/boilerplate/internal/httpserver"
 )
 
 // app is the assembled service.
@@ -66,13 +66,13 @@ func newApp(cfg *config.Config, l *slog.Logger) (*app, error) {
 	greeterSvc := &greeter.Service{}
 
 	// Transports.
-	a.httpSrv = newHTTPServer(httpapi.NewHandler(httpapi.Deps{
+	a.httpSrv = newHTTPServer(httpserver.NewHandler(httpserver.Deps{
 		Logger:  l,
 		Metrics: reg,
 		Greeter: greeterSvc,
 	}), 30*time.Second)
 
-	a.grpcSrv = grpcapi.NewServer(grpcapi.Deps{
+	a.grpcSrv = grpcserver.NewServer(grpcserver.Deps{
 		Logger:  l,
 		Metrics: reg,
 		Health:  a.health,
@@ -80,7 +80,7 @@ func newApp(cfg *config.Config, l *slog.Logger) (*app, error) {
 	})
 
 	// pprof profiles and traces stream for up to 30s by default, hence the longer write timeout.
-	a.debugSrv = newHTTPServer(debug.NewHandler(reg, a.ready.Load), 2*time.Minute)
+	a.debugSrv = newHTTPServer(debugserver.NewHandler(reg, a.ready.Load), 2*time.Minute)
 
 	var err error
 

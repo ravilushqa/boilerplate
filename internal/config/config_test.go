@@ -7,7 +7,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/stretchr/testify/require"
 
-	"github.com/ravilushqa/boilerplate/config"
+	"github.com/ravilushqa/boilerplate/internal/config"
 )
 
 func TestParseDefaults(t *testing.T) {

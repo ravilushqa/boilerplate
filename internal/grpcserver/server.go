@@ -1,8 +1,8 @@
-// Package grpcapi implements the public gRPC API.
+// Package grpcserver implements the public gRPC API.
 //
 // Handlers are thin: they validate transport-level input, call business
 // logic and map its errors to gRPC status codes. No business logic here.
-package grpcapi
+package grpcserver
 
 import (
 	"context"
@@ -21,7 +21,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	greeterv1 "github.com/ravilushqa/boilerplate/api/greeter/v1"
-	"github.com/ravilushqa/boilerplate/greeter"
+	"github.com/ravilushqa/boilerplate/internal/greeter"
 )
 
 // Greeter is the business logic the API depends on.

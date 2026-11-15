@@ -80,3 +80,15 @@ testify is back for assertions: the `go` skill does not forbid it, and
 `require` keeps tests short and failure messages clear. Only `require` is
 allowed (`assert` and `mock` are denied by depguard); complex structs and
 maps are still compared with `cmp.Diff`, as the skill recommends.
+
+### Packages under `internal/`
+
+Go packages moved from the module root into `internal/` (still one level
+deep). With domain packages at the root they were interleaved with `api/`,
+`chart/`, `docs/`, `tools/` and `cmd/`, and the root grew with every new
+domain; `internal/` keeps all service code in one place and the root for the
+entry point and non-Go files. This follows the server-project layout in
+<https://go.dev/doc/modules/layout> and is a deliberate exception to the `go`
+skill, which considers `internal/` unnecessary depth for applications. The rest
+of the skill's layout guidance (flat, no layer packages) still applies.
+

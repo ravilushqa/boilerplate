@@ -18,8 +18,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/ravilushqa/boilerplate/config"
-	"github.com/ravilushqa/boilerplate/version"
+	"github.com/ravilushqa/boilerplate/internal/config"
+	"github.com/ravilushqa/boilerplate/internal/version"
 )
 
 func main() {
