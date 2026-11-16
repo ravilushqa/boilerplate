@@ -11,5 +11,5 @@ spec:
     - name: wget
       image: busybox
       command: ['wget']
-      args: ['{{ include "boilerplate.fullname" . }}:{{ .Values.service.port }}']
+      args: ['-qO-', 'http://{{ include "boilerplate.fullname" . }}:{{ .Values.ports.debug }}/readyz']
   restartPolicy: Never

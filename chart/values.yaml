@@ -1,69 +1,70 @@
-# Default values for boilerplate.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+# Default values for the boilerplate chart.
+# Every key is documented; render with `make helm-lint`.
 
-replicaCount: 1
+replicaCount: 2
 
 image:
-  repository: ravilushqa/boilerplate
+  repository: ghcr.io/ravilushqa/boilerplate
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
   tag: ""
 
 imagePullSecrets: []
-nameOverride: "boilerplate"
-fullnameOverride: "boilerplate"
+nameOverride: ""
+fullnameOverride: ""
 
 serviceAccount:
-  # Specifies whether a service account should be created
+  # Specifies whether a service account should be created.
   create: true
-  # Annotations to add to the service account
+  # Annotations to add to the service account.
   annotations: {}
   # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
+  # If not set and create is true, a name is generated using the fullname template.
   name: ""
 
 podAnnotations: {}
 
-podSecurityContext: {}
-  # fsGroup: 2000
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
 
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
-  # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+# Container ports. Keep in sync with HTTP_ADDR, GRPC_ADDR and DEBUG_ADDR.
+ports:
+  http: 8080
+  grpc: 50051
+  debug: 8081
 
 service:
   type: ClusterIP
-  port: 8080
-  externalPort: 8080
-
-# enable tls on the boilerplate service
-tls:
-  enabled: false
-  # the name of the secret used to mount the certificate key pair
-  secretName:
 
 ingress:
   enabled: false
   className: ""
   annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
   hosts:
     - host: chart-example.local
       paths:
         - path: /
-          pathType: ImplementationSpecific
+          pathType: Prefix
   tls: []
   #  - secretName: chart-example-tls
   #    hosts:
   #      - chart-example.local
 
-# create a certificate manager certificate (cert-manager required)
+# enable tls on the service (mounts the certificate secret)
+tls:
+  enabled: false
+  # the name of the secret used to mount the certificate key pair
+  secretName:
+
+# create a cert-manager certificate (cert-manager required)
 certificate:
   create: false
   # the issuer used to issue the certificate
@@ -75,21 +76,16 @@ certificate:
     - boilerplate
 
 resources:
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  limits:
-    cpu: 100m
-    memory: 128Mi
   requests:
     cpu: 100m
+    memory: 128Mi
+  limits:
     memory: 128Mi
 
 autoscaling:
   enabled: false
-  minReplicas: 1
-  maxReplicas: 100
+  minReplicas: 2
+  maxReplicas: 10
   targetCPUUtilizationPercentage: 80
   # targetMemoryUtilizationPercentage: 80
 
@@ -101,26 +97,29 @@ affinity: {}
 
 # https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
 probes:
-  readiness:
-    initialDelaySeconds: 1
-    timeoutSeconds: 5
-    failureThreshold: 3
-    successThreshold: 1
-    periodSeconds: 10
   liveness:
-    initialDelaySeconds: 1
+    path: /livez
+    periodSeconds: 10
     timeoutSeconds: 5
     failureThreshold: 3
-    successThreshold: 1
-    periodSeconds: 10
+  readiness:
+    path: /readyz
+    periodSeconds: 5
+    timeoutSeconds: 5
+    failureThreshold: 2
 
-# create Prometheus Operator monitor
+# Must be longer than SHUTDOWN_TIMEOUT so in-flight requests can finish.
+terminationGracePeriodSeconds: 30
+
+# Prometheus Operator ServiceMonitor (requires the monitoring.coreos.com CRDs).
 serviceMonitor:
-  enabled: true
+  enabled: false
   interval: 15s
   additionalLabels: {}
 
-# environment variables to pass to the container
-env: {
-    "ENV": "production"
-}
+# Environment variables passed to the container. See .env.example for all options.
+env:
+  ENV: production
+  LOG_FORMAT: json
+  LOG_LEVEL: info
+  SHUTDOWN_TIMEOUT: 15s

@@ -25,6 +25,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "boilerplate.serviceAccountName" . }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -34,41 +35,39 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
-            - name: infra
-              containerPort: 8081
-              protocol: TCP
             - name: http
-              containerPort: 8080
+              containerPort: {{ .Values.ports.http }}
               protocol: TCP
             - name: grpc
-              containerPort: 50051
+              containerPort: {{ .Values.ports.grpc }}
+              protocol: TCP
+            - name: debug
+              containerPort: {{ .Values.ports.debug }}
               protocol: TCP
           livenessProbe:
             httpGet:
-              path: /healthz
-              port: infra
-            {{- with .Values.probes.liveness }}
-            initialDelaySeconds: {{ .initialDelaySeconds | default 1 }}
-            timeoutSeconds: {{ .timeoutSeconds | default 5 }}
-            failureThreshold: {{ .failureThreshold | default 3 }}
-            successThreshold: {{ .successThreshold | default 1 }}
-            periodSeconds: {{ .periodSeconds | default 10 }}
-            {{- end }}
+              path: {{ .Values.probes.liveness.path }}
+              port: debug
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.liveness.failureThreshold }}
           readinessProbe:
             httpGet:
-              path: /healthz
-              port: infra
-            {{- with .Values.probes.readiness }}
-            initialDelaySeconds: {{ .initialDelaySeconds | default 1 }}
-            timeoutSeconds: {{ .timeoutSeconds | default 5 }}
-            failureThreshold: {{ .failureThreshold | default 3 }}
-            successThreshold: {{ .successThreshold | default 1 }}
-            periodSeconds: {{ .periodSeconds | default 10 }}
-            {{- end }}
+              path: {{ .Values.probes.readiness.path }}
+              port: debug
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.readiness.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.readiness.failureThreshold }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           env:
-            {{ include "boilerplate.env" . | indent 12 }}
+            - name: HTTP_ADDR
+              value: ":{{ .Values.ports.http }}"
+            - name: GRPC_ADDR
+              value: ":{{ .Values.ports.grpc }}"
+            - name: DEBUG_ADDR
+              value: ":{{ .Values.ports.debug }}"
+            {{- include "boilerplate.env" . | trim | nindent 12 }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

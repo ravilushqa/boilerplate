@@ -1,11 +1,22 @@
 {
-  "extends": [
-    "config:base"
-  ],
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":semanticCommitTypeAll(chore)"],
+  "postUpdateOptions": ["gomodTidy", "gomodUpdateImportPaths"],
   "packageRules": [
     {
+      "description": "Automerge non-major updates once CI is green",
       "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
       "automerge": true
+    },
+    {
+      "description": "Development tools are updated together",
+      "matchFileNames": ["tools/go.mod"],
+      "groupName": "tools"
+    },
+    {
+      "description": "gRPC and protobuf are updated together",
+      "matchPackageNames": ["google.golang.org/grpc{/,}**", "google.golang.org/protobuf{/,}**", "google.golang.org/genproto{/,}**"],
+      "groupName": "grpc"
     }
   ]
 }

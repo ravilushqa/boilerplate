@@ -1,0 +1,10 @@
+# Protobuf linting and breaking-change detection: https://buf.build/docs/configuration/v2/buf-yaml
+version: v2
+modules:
+  - path: api
+lint:
+  use:
+    - STANDARD
+breaking:
+  use:
+    - FILE

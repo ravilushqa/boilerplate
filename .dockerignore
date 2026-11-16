@@ -1,0 +1,13 @@
+# Keep the build context small and the cache stable.
+.git
+.github
+.claude
+.idea
+.vscode
+bin
+chart
+docs
+*.md
+coverage.out
+compose.yaml
+Dockerfile

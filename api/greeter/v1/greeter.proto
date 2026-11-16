@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package greeter.v1;
+
+option go_package = "github.com/ravilushqa/boilerplate/api/greeter/v1;greeterv1";
+
+// GreeterService is an example API. Replace it with your own.
+service GreeterService {
+  // Greet returns a greeting for the given name.
+  // Returns INVALID_ARGUMENT if the name is empty or too long.
+  rpc Greet(GreetRequest) returns (GreetResponse);
+}
+
+message GreetRequest {
+  // Name to greet. Required, at most 100 characters.
+  string name = 1;
+}
+
+message GreetResponse {
+  // Greeting message, e.g. "Hello, World!".
+  string message = 1;
+}

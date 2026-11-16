@@ -1,0 +1,14 @@
+# Local environment: `make up`.
+# Add dependencies (databases, queues, ...) as extra services here.
+services:
+  boilerplate:
+    build:
+      context: .
+    environment:
+      ENV: development
+      LOG_FORMAT: text
+      LOG_LEVEL: debug
+    ports:
+      - "8080:8080"   # HTTP API
+      - "50051:50051" # gRPC API
+      - "8081:8081"   # debug: /livez, /readyz, /metrics, /debug/pprof/
