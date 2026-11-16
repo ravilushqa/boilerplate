@@ -2,5 +2,4 @@
 # `boilerplate new` removes them from generated projects.
 cmd
 .github/workflows/cli.yml
-.github/workflows/release.yml
 docs/template.md
